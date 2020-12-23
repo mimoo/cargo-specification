@@ -2,7 +2,10 @@
 
 use askama::Template;
 use clap::{App, Arg};
-use comrak::{markdown_to_html, ComrakOptions};
+use comrak::{
+    markdown_to_html, ComrakExtensionOptions, ComrakOptions, ComrakParseOptions,
+    ComrakRenderOptions,
+};
 use std::{
     fmt::Write as FmtWrite,
     fs::{self, File},
@@ -84,7 +87,33 @@ fn main() {
     }
 
     // markdown -> HTML
-    let content = markdown_to_html(&content, &ComrakOptions::default());
+    let content = markdown_to_html(
+        &content,
+        &ComrakOptions {
+            extension: ComrakExtensionOptions {
+                strikethrough: true,
+                tagfilter: true,
+                table: true,
+                autolink: true,
+                tasklist: true,
+                superscript: true,
+                header_ids: None,
+                footnotes: true,
+                description_lists: true,
+            },
+            parse: ComrakParseOptions {
+                smart: true,
+                default_info_string: None,
+            },
+            render: ComrakRenderOptions {
+                hardbreaks: false,
+                github_pre_lang: true,
+                width: 0,
+                unsafe_: true, // it's our spec afterall
+                escape: false,
+            },
+        },
+    );
 
     // html output
     let html_page = HtmlSpecification {
