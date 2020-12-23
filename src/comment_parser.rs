@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 
-const SPECIFICATION_COMMENT: &str = "//~ ";
+const SPECIFICATION_COMMENT: &str = "//~";
 const SPECIFICATION_INSTRUCTION: &str = "spec:";
 
 /// Parse a file and return the file specification
@@ -13,7 +13,7 @@ pub(crate) fn parse_file(file_name: &str) -> String {
     let mut result = String::new();
 
     // go over file line by line
-    let file = File::open(file_name).unwrap_or_else(|e| panic!("{}", e));
+    let file = File::open(file_name).unwrap_or_else(|e| panic!("{}: {}", e, file_name));
     let lines = BufReader::new(file).lines();
     for line in lines {
         let line = line.unwrap();
@@ -28,7 +28,7 @@ pub(crate) fn parse_file(file_name: &str) -> String {
         }
 
         // if the line starts with //~ parse it
-        let comment = line.split_once(SPECIFICATION_COMMENT).unwrap().1;
+        let comment = line.split_once(SPECIFICATION_COMMENT).unwrap().1.trim();
         if comment.starts_with(SPECIFICATION_INSTRUCTION) {
             // match on the instruction given in `//~ spec:instruction`
             match comment.split_once(SPECIFICATION_INSTRUCTION).unwrap().1 {

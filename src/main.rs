@@ -2,7 +2,12 @@
 
 use askama::Template;
 use clap::{App, Arg};
-use std::{fmt::Write as FmtWrite, fs::File, io::Write as IOWrite};
+use std::{
+    fmt::Write as FmtWrite,
+    fs::{self, File},
+    io::Write as IOWrite,
+    path::PathBuf,
+};
 
 mod comment_parser;
 mod toml_parser;
@@ -55,15 +60,25 @@ fn main() {
         .value_of("specification-path")
         .expect("must use --specification-path option");
 
+    // parse the Specification.toml file
     let specification = toml_parser::parse_toml_spec(toml_spec);
     println!("{:?}", specification);
 
-    let files = vec!["../src/data_structures.rs"];
+    // get dir of specification file
+    let spec_dir = PathBuf::from(toml_spec);
+    let mut spec_dir = fs::canonicalize(&spec_dir).unwrap();
+    spec_dir.pop();
+    println!("{:?}", spec_dir);
+
+    // flatten the sections
+    let files: Vec<&String> = specification.sections.values().flatten().collect();
 
     let mut content = String::new();
     for file in files {
-        let res = comment_parser::parse_file(file);
-        writeln!(&mut content, "{}", res);
+        let mut path = spec_dir.clone();
+        path.push(file);
+        let res = comment_parser::parse_file(path.to_str().unwrap());
+        writeln!(&mut content, "{}", res).unwrap();
     }
 
     // html output

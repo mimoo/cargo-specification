@@ -1,0 +1,8 @@
+[specification]
+name = "Consensus"
+description = "The consensus specification describes the mechanism used by the Diem Payment Network (LPN) validators to agree on both ordering and transaction execution output under byzantine fault-tolerant (BFT) conditions - at most f validators (where f < (all validators)/3) are faulty or malicious. Currently, the consensus specification is an implementation of DiemBFT, a BFT consensus protocol that ensures liveness and safety under partial synchrony. The DiemBFT whitepaper describes a high level overview of the protocol, the liveness and safety proofs, and a rationale on why DiemBFT was adopted for the LPN. This document specifies how to implement the DiemBFT protocol in order to participate as a validating node in the LPN."
+version = "0.1.0"
+authors = ["David Wong"]
+
+[sections]
+overview = ["src/overview.rs"]
