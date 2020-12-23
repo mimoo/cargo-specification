@@ -9,13 +9,13 @@ const SPECIFICATION_COMMENT: &str = "//~ ";
 const SPECIFICATION_INSTRUCTION: &str = "spec:";
 
 /// Parse a file and return the file specification
-pub fn parse_file(file_name: &str) -> String {
+pub(crate) fn parse_file(file_name: &str) -> String {
     // state
     let mut print_line = false; // indicates if we're between `//~ spec:startcode` and `//~spec:endcode` statements
     let mut result = String::new();
 
     // go over file line by line
-    let file = File::open(file_name).unwrap_or_else(|e| panic!("could not open {}", e));
+    let file = File::open(file_name).unwrap_or_else(|e| panic!("{}", e));
     let lines = BufReader::new(file).lines();
     for line in lines {
         let line = line.unwrap();
