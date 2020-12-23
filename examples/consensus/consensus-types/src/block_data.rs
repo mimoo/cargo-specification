@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq)]
+//~ spec:startcode
 pub enum BlockType {
     Proposal {
         /// T of the block (e.g. one or more transaction(s)
@@ -33,6 +34,7 @@ pub enum BlockType {
     /// BlockTree for all epochs.
     Genesis,
 }
+//~ spec:endcode
 
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq, Eq, CryptoHasher, BCSCryptoHash)]
 /// Block has the core data of a consensus block that should be persistent when necessary.

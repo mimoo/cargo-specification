@@ -6,3 +6,4 @@ authors = ["David Wong"]
 
 [sections]
 overview = ["src/overview.rs"]
+data_structures = ["consensus-types/src/block.rs", "consensus-types/src/block_data.rs"]

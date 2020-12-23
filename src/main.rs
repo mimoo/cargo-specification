@@ -2,6 +2,7 @@
 
 use askama::Template;
 use clap::{App, Arg};
+use comrak::{markdown_to_html, ComrakOptions};
 use std::{
     fmt::Write as FmtWrite,
     fs::{self, File},
@@ -73,6 +74,7 @@ fn main() {
     // flatten the sections
     let files: Vec<&String> = specification.sections.values().flatten().collect();
 
+    // retrieve the content from all the files
     let mut content = String::new();
     for file in files {
         let mut path = spec_dir.clone();
@@ -80,6 +82,9 @@ fn main() {
         let res = comment_parser::parse_file(path.to_str().unwrap());
         writeln!(&mut content, "{}", res).unwrap();
     }
+
+    // markdown -> HTML
+    let content = markdown_to_html(&content, &ComrakOptions::default());
 
     // html output
     let html_page = HtmlSpecification {

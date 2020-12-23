@@ -22,7 +22,7 @@ pub(crate) fn parse_file(file_name: &str) -> String {
             // only print a normal line if it is between `//~ spec:startcode` and `//~spec:endcode` statements
             // TODO: reset indentation
             if print_line {
-                writeln!(&mut result, "{}", line);
+                writeln!(&mut result, "{}", line).unwrap();
             }
             continue;
         }
@@ -33,10 +33,16 @@ pub(crate) fn parse_file(file_name: &str) -> String {
             // match on the instruction given in `//~ spec:instruction`
             match comment.split_once(SPECIFICATION_INSTRUCTION).unwrap().1 {
                 // spec:startcode will print every line afterwards, up until a spec:endcode statement
-                "startcode" if !print_line => print_line = true,
+                "startcode" if !print_line => {
+                    writeln!(&mut result, "```rust").unwrap();
+                    print_line = true;
+                }
                 "startcode" if print_line => panic!("cannot startcode when already started"),
                 // spec:endcode ends spec:startcode
-                "endcode" if print_line => print_line = false,
+                "endcode" if print_line => {
+                    writeln!(&mut result, "```").unwrap();
+                    print_line = false;
+                }
                 "endcode" if !print_line => {
                     panic!("cannot endcode if haven't startcode before")
                 }
@@ -45,8 +51,13 @@ pub(crate) fn parse_file(file_name: &str) -> String {
             };
         } else {
             // if the specification comment is not an instruction, save it
-            writeln!(&mut result, "{}", comment);
+            writeln!(&mut result, "{}", comment).unwrap();
         }
+    }
+
+    // check state is consistent
+    if print_line {
+        panic!("a //~ spec:startcode was left open ended");
     }
 
     //

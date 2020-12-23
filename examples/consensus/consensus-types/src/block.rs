@@ -27,6 +27,7 @@ pub mod block_test_utils;
 pub mod block_test;
 
 #[derive(Serialize, Clone, PartialEq, Eq)]
+//~ spec:startcode
 /// Block has the core data of a consensus block that should be persistent when necessary.
 /// Each block must know the id of its parent and keep the QuorurmCertificate to that parent.
 pub struct Block {
@@ -39,6 +40,7 @@ pub struct Block {
     /// this is only set within Proposal blocks
     signature: Option<Ed25519Signature>,
 }
+//~ spec:endcode
 
 impl fmt::Debug for Block {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
