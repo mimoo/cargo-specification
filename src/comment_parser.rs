@@ -22,6 +22,7 @@ pub(crate) fn parse_file(file_name: &str) -> String {
 
         if !line.trim().starts_with(SPECIFICATION_COMMENT) {
             // only print a normal line if it is between `//~ spec:startcode` and `//~spec:endcode` statements
+            // TODO: reset indentation
             if print_line {
                 writeln!(&mut result, "{}", line);
             }
