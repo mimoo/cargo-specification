@@ -1,5 +1,3 @@
-#![feature(str_split_once)]
-
 use std::fmt::Write as FmtWrite;
 use std::fs::File;
 use std::io::prelude::*;

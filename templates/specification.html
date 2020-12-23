@@ -54,10 +54,14 @@
 		var respecConfig = {
 			preProcess: [loadRust, loadProto],
 			specStatus: "base",
-			editors: [{
-				name: "{{name}}",
-				url: "{{url}}",
-			}],
+			editors: [
+			{% for editor in editors %}
+				{
+					name: {{editor.0}},
+					url: {{editor.1}},
+				},
+			{% endfor %}
+			],
 			github: "{{github}}",
 			shortName: "{{shortName}}",
 			format: "markdown",
@@ -67,7 +71,7 @@
 
 <body>
 	<section id="abstract">
-    {{abstract}}
+    {{description}}
 	</section>
   
   {{content}}

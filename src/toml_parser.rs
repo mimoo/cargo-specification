@@ -9,16 +9,17 @@ use std::io::Read;
 /// TKTK
 #[derive(Deserialize, Debug)]
 pub(crate) struct SpecificationFile {
-    specification: Specification,
-    sections: BTreeMap<String, Vec<String>>, // vec of files
+    pub specification: Specification,
+    pub sections: BTreeMap<String, Vec<String>>, // vec of files
 }
 
 /// TKTK
 #[derive(Deserialize, Debug)]
 pub(crate) struct Specification {
-    name: String,
-    version: Option<String>,
-    authors: Vec<String>,
+    pub name: String,
+    pub description: String,
+    pub version: Option<String>,
+    pub authors: Vec<String>,
 }
 
 ///
