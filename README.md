@@ -43,7 +43,7 @@ Cargo-specification recognizes comments starting with `//~ `. For example:
 If you don't like this, or it doesn't work with the language you use (although we should recognize automatically the extension of your files and change the comment accordingly), you can change it via the command line, just make sure that it is a valid command:
 
 ```
-$ cargo specification path/to/Specification.toml -d "//#" -o specification.html
+$ cargo specification path/to/Specification.toml -d "#~ " -o specification.html
 ```
 
 You can also import blocks of code by surrounding them with `//~ spec:startcode` and `//~ spec:endcode`:
