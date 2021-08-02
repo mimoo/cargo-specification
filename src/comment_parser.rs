@@ -6,7 +6,7 @@ use std::io::BufReader;
 const SPECIFICATION_COMMENT: &str = "//~";
 const SPECIFICATION_INSTRUCTION: &str = "spec:";
 
-/// Parse a file and return the file specification
+/// ~Parse a file and return the file specification
 pub(crate) fn parse_file(file_name: &str) -> String {
     // state
     let mut print_line = false; // indicates if we're between `//~ spec:startcode` and `//~spec:endcode` statements

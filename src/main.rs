@@ -1,5 +1,3 @@
-#![feature(str_split_once)]
-
 use askama::Template;
 use clap::{App, Arg};
 use comrak::{
@@ -22,7 +20,7 @@ struct HtmlSpecification {
     name: String,
     editors: Vec<(String, String)>,
     github: String,
-    shortName: String,
+    short_name: String,
     description: String,
     content: String,
 }
@@ -38,6 +36,7 @@ fn main() {
                 .help("Sets the path to the required Specification.toml")
                 .short("s")
                 .long("specification-path")
+                .default_value("./Specification.toml")
                 .takes_value(true)
                 .value_name("PATH"),
         )
@@ -46,6 +45,7 @@ fn main() {
                 .help("prints the output as HTML")
                 .short("o")
                 .long("html-output")
+                .default_value("./specification.html")
                 .takes_value(true),
         )
         .arg(
@@ -100,6 +100,7 @@ fn main() {
                 header_ids: None,
                 footnotes: true,
                 description_lists: true,
+                front_matter_delimiter: None,
             },
             parse: ComrakParseOptions {
                 smart: true,
@@ -125,10 +126,12 @@ fn main() {
             .map(|author| (author, "".to_string()))
             .collect(),
         github: "".to_string(),
-        shortName: "".to_string(),
+        short_name: "".to_string(),
         description: specification.specification.description,
         content: content,
     };
+
+    //
 
     let mut file = File::create(html_output).unwrap_or_else(|e| panic!("{}", e));
     let _ = write!(&mut file, "{}", html_page.render().unwrap()).unwrap();
