@@ -1,0 +1,8 @@
+[specification]
+name = "Cargo-specification"
+description = "This specification describes how the command-line utility cargo-specification works."
+version = "0.1.0"
+authors = ["David Wong"]
+
+[sections]
+overview = ["src/comment_parser.rs"]
