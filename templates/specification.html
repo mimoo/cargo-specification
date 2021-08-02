@@ -55,16 +55,16 @@
 			preProcess: [loadRust, loadProto],
 			specStatus: "base",
 			editors: [
-				{% for editor in editors %}
-		{
-			name: "{{editor.0}}",
-				url: "{{editor.1}}",
+				// {% for editor in editors %}
+				{
+					name: "{{editor.0}}",
+					url: "{{editor.1}}",
 				},
-		{% endfor %}
+				// {% endfor %}
 			],
-		github: "{{github}}",
+			github: "{{github}}",
 			shortName: "{{short_name}}",
-//			format: "markdown",
+			//			format: "markdown",
 		};
 	</script>
 </head>
