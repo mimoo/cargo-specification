@@ -1,7 +1,9 @@
 # The code is the spec
 
 This is a tool to transform your code in a specification!
-This tool should be agnostic to the code you use
+This tool should be agnostic to the code you use.
+
+To see it in action, just look at the code in this codebase as well as [the spec it produced](https://mimoo.github.io/cargo-specification/).
 
 ## Usage
 
