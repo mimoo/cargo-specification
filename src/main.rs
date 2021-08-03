@@ -14,6 +14,7 @@ use std::{
 //~ ## Cargo-specification
 
 mod comment_parser;
+mod git;
 mod toml_parser;
 
 #[derive(Template)]
@@ -44,6 +45,15 @@ fn main() {
                 .value_name("PATH"),
         )
         .arg(
+            Arg::with_name("delimiter")
+                .help("Sets the marker that Cargo-specification will recognize, default is //~")
+                .short("d")
+                .long("delimiter")
+                .default_value("//~")
+                .takes_value(true)
+                .value_name("PATH"),
+        )
+        .arg(
             Arg::with_name("html-output")
                 .help("prints the output as HTML")
                 .short("o")
@@ -66,6 +76,9 @@ fn main() {
     let toml_spec = matches
         .value_of("specification-path")
         .expect("must use --specification-path option");
+    let delimiter = matches
+        .value_of("delimiter")
+        .expect("must use --delimiter option");
 
     //~ * parse the Specification.toml file
     let specification = toml_parser::parse_toml_spec(toml_spec);
@@ -85,7 +98,7 @@ fn main() {
     for file in files {
         let mut path = spec_dir.clone();
         path.push(file);
-        let res = comment_parser::parse_file(path.to_str().unwrap());
+        let res = comment_parser::parse_file(delimiter, path.to_str().unwrap());
         writeln!(&mut content, "{}", res).unwrap();
     }
 

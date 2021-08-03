@@ -5,11 +5,10 @@ use std::io::BufReader;
 
 //~ ## File parser
 
-const SPECIFICATION_COMMENT: &str = "//~";
 const SPECIFICATION_INSTRUCTION: &str = "spec:";
 
 //~ Parse a file and return the file specification
-pub(crate) fn parse_file(file_name: &str) -> String {
+pub(crate) fn parse_file(delimiter: &str, file_name: &str) -> String {
     // state
     let mut print_line = false; // indicates if we're between `//~ spec:startcode` and `//~spec:endcode` statements
     let mut result = String::new();
@@ -20,7 +19,7 @@ pub(crate) fn parse_file(file_name: &str) -> String {
     for line in lines {
         let line = line.unwrap();
 
-        if !line.trim().starts_with(SPECIFICATION_COMMENT) {
+        if !line.trim().starts_with(delimiter) {
             // only print a normal line if it is between `//~ spec:startcode` and `//~spec:endcode` statements
             // TODO: reset indentation
             if print_line {
@@ -30,7 +29,7 @@ pub(crate) fn parse_file(file_name: &str) -> String {
         }
 
         // if the line starts with //~ parse it
-        let comment = line.split_once(SPECIFICATION_COMMENT).unwrap().1.trim();
+        let comment = line.split_once(delimiter).unwrap().1.trim();
         if comment.starts_with(SPECIFICATION_INSTRUCTION) {
             // match on the instruction given in `//~ spec:instruction`
             match comment.split_once(SPECIFICATION_INSTRUCTION).unwrap().1 {
