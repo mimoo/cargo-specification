@@ -73,32 +73,48 @@
 	<section id="abstract">This specification describes how the command-line utility cargo-specification works.</section>
 
 	<h2>Cargo-specification</h2>
-<p>the main algorithm:</p>
+<p>The main algorithm:</p>
 <ul>
-<li>parse arguments</li>
-<li>parse the Specification.toml file</li>
-<li>get dir of specification file</li>
-<li>flatten the sections</li>
-<li>retrieve the content from all the files</li>
-<li>markdown -&gt; HTML</li>
-<li>html output</li>
+<li>
+<p>parse arguments</p>
+</li>
+<li>
+<p>parse the Specification.toml file</p>
+</li>
+<li>
+<p>get dir of specification file</p>
+</li>
+<li>
+<p>flatten the sections</p>
+</li>
+<li>
+<p>retrieve the content from all the files</p>
+</li>
+<li>
+<p>markdown -&gt; HTML</p>
+</li>
+<li>
+<p>html output</p>
+</li>
 </ul>
 <h2>File parser</h2>
 <p>Parse a file and return the file specification</p>
 <h2>TOML Parser</h2>
 <p>A specification is all the concatenated comments from a list of files
-The list of files is maintained by a Specification.toml file
-A specification file contains a specification, as well as sections of (title, text):</p>
-<pre lang="rust"><code>#[derive(Deserialize, Debug)]
+The list of files is maintained by a Specification.toml file.</p>
+<p>Below are the different structures that we use to organize the specification:</p>
+<pre lang="rust"><code>
+/// A specification file contains a specification, as well as sections of (title, text)
+#[derive(Deserialize, Debug)]
 pub(crate) struct SpecificationFile {
     /// information about a specification
     pub metadata: Metadata,
     /// vec of files
     pub sections: BTreeMap&lt;String, Vec&lt;String&gt;&gt;,
 }
-</code></pre>
-<p>Metadata about a specification:</p>
-<pre lang="rust"><code>#[derive(Deserialize, Debug)]
+
+/// Metadata about a specification
+#[derive(Deserialize, Debug)]
 pub(crate) struct Metadata {
     /// Name of the specification
     pub name: String,
@@ -109,6 +125,7 @@ pub(crate) struct Metadata {
     /// Authors, if any
     pub authors: Vec&lt;String&gt;,
 }
+
 </code></pre>
 
 
