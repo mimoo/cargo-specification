@@ -11,6 +11,8 @@ use std::{
     path::PathBuf,
 };
 
+//~ ## Cargo-specification
+
 mod comment_parser;
 mod toml_parser;
 
@@ -25,8 +27,9 @@ struct HtmlSpecification {
     content: String,
 }
 
+//~ the main algorithm:
 fn main() {
-    // parse arguments
+    //~ * parse arguments
     let matches = App::new("cargo-specification")
         .version("1.0")
         .author("David W. <davidwg@fb.com>")
@@ -64,20 +67,20 @@ fn main() {
         .value_of("specification-path")
         .expect("must use --specification-path option");
 
-    // parse the Specification.toml file
+    //~ * parse the Specification.toml file
     let specification = toml_parser::parse_toml_spec(toml_spec);
     println!("{:?}", specification);
 
-    // get dir of specification file
+    //~ * get dir of specification file
     let spec_dir = PathBuf::from(toml_spec);
     let mut spec_dir = fs::canonicalize(&spec_dir).unwrap();
     spec_dir.pop();
     println!("{:?}", spec_dir);
 
-    // flatten the sections
+    //~ * flatten the sections
     let files: Vec<&String> = specification.sections.values().flatten().collect();
 
-    // retrieve the content from all the files
+    //~ * retrieve the content from all the files
     let mut content = String::new();
     for file in files {
         let mut path = spec_dir.clone();
@@ -86,7 +89,7 @@ fn main() {
         writeln!(&mut content, "{}", res).unwrap();
     }
 
-    // markdown -> HTML
+    //~ * markdown -> HTML
     let content = markdown_to_html(
         &content,
         &ComrakOptions {
@@ -116,22 +119,20 @@ fn main() {
         },
     );
 
-    // html output
+    //~ * html output
     let html_page = HtmlSpecification {
-        name: specification.specification.name,
+        name: specification.metadata.name,
         editors: specification
-            .specification
+            .metadata
             .authors
             .into_iter()
             .map(|author| (author, "".to_string()))
             .collect(),
         github: "".to_string(),
         short_name: "".to_string(),
-        description: specification.specification.description,
+        description: specification.metadata.description,
         content: content,
     };
-
-    //
 
     let mut file = File::create(html_output).unwrap_or_else(|e| panic!("{}", e));
     let _ = write!(&mut file, "{}", html_page.render().unwrap()).unwrap();

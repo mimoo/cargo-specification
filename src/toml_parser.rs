@@ -1,26 +1,37 @@
-//! A specification is all the concatenated comments from a list of files
-//! The list of files is maintained by a Specification.toml file
+//~ ## TOML Parser
+//~ A specification is all the concatenated comments from a list of files
+//~ The list of files is maintained by a Specification.toml file
 
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::Read;
 
-/// TKTK
+//~ A specification file contains a specification, as well as sections of (title, text):
+//~ spec:startcode
 #[derive(Deserialize, Debug)]
 pub(crate) struct SpecificationFile {
-    pub specification: Specification,
-    pub sections: BTreeMap<String, Vec<String>>, // vec of files
+    /// information about a specification
+    pub metadata: Metadata,
+    /// vec of files
+    pub sections: BTreeMap<String, Vec<String>>,
 }
+//~ spec:endcode
 
-/// TKTK
+//~ Metadata about a specification:
+//~ spec:startcode
 #[derive(Deserialize, Debug)]
-pub(crate) struct Specification {
+pub(crate) struct Metadata {
+    /// Name of the specification
     pub name: String,
+    /// A description
     pub description: String,
+    /// Version of the spec
     pub version: Option<String>,
+    /// Authors, if any
     pub authors: Vec<String>,
 }
+//~ spec:endcode
 
 ///
 pub(crate) fn parse_toml_spec(spec_file: &str) -> SpecificationFile {
