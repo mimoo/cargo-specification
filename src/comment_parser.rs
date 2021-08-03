@@ -1,9 +1,9 @@
+//~ ## File parser
+
 use std::fmt::Write as FmtWrite;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
-
-//~ ## File parser
 
 const SPECIFICATION_INSTRUCTION: &str = "spec:";
 
@@ -14,6 +14,7 @@ pub(crate) fn parse_file(delimiter: &str, file_name: &str) -> String {
     let mut result = String::new();
 
     // go over file line by line
+    let mut previous_line_is_part_of_spec = None;
     let file = File::open(file_name).unwrap_or_else(|e| panic!("{}: {}", e, file_name));
     let lines = BufReader::new(file).lines();
     for line in lines {
@@ -25,6 +26,7 @@ pub(crate) fn parse_file(delimiter: &str, file_name: &str) -> String {
             if print_line {
                 writeln!(&mut result, "{}", line).unwrap();
             }
+            previous_line_is_part_of_spec = Some(false);
             continue;
         }
 
@@ -51,8 +53,12 @@ pub(crate) fn parse_file(delimiter: &str, file_name: &str) -> String {
                 _ => unimplemented!(),
             };
         } else {
+            if let Some(false) = previous_line_is_part_of_spec {
+                writeln!(&mut result, "\n").unwrap();
+            }
             // if the specification comment is not an instruction, save it
             writeln!(&mut result, "{}", comment).unwrap();
+            previous_line_is_part_of_spec = Some(true);
         }
     }
 

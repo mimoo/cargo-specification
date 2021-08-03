@@ -28,7 +28,7 @@ struct HtmlSpecification {
     content: String,
 }
 
-//~ the main algorithm:
+//~ The main algorithm:
 fn main() {
     //~ * parse arguments
     let matches = App::new("cargo-specification")
