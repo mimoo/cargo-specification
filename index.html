@@ -74,31 +74,24 @@
 
 	<h2>Cargo-specification</h2>
 <p>The main algorithm:</p>
-<ul>
+<ol>
 <li>
-<p>parse arguments</p>
+<p>parse command-line arguments</p>
 </li>
 <li>
 <p>parse the Specification.toml file</p>
 </li>
 <li>
-<p>get dir of specification file</p>
+<p>retrieves the content from all the files listed in the .toml</p>
 </li>
 <li>
-<p>flatten the sections</p>
+<p>figures out the spec format</p>
 </li>
-<li>
-<p>retrieve the content from all the files</p>
-</li>
-<li>
-<p>markdown -&gt; HTML</p>
-</li>
-<li>
-<p>html output</p>
-</li>
-</ul>
+</ol>
 <h2>File parser</h2>
-<p>Parse a file and return the file specification</p>
+<ul>
+<li>for markdown files, we retrieve the entire content</li>
+</ul>
 <h2>TOML Parser</h2>
 <p>A specification is all the concatenated comments from a list of files
 The list of files is maintained by a Specification.toml file.</p>
@@ -106,7 +99,7 @@ The list of files is maintained by a Specification.toml file.</p>
 <pre lang="rust"><code>
 /// A specification file contains a specification, as well as sections of (title, text)
 #[derive(Deserialize, Debug)]
-pub(crate) struct SpecificationFile {
+pub struct Specification {
     /// information about a specification
     pub metadata: Metadata,
     /// vec of files
@@ -115,7 +108,7 @@ pub(crate) struct SpecificationFile {
 
 /// Metadata about a specification
 #[derive(Deserialize, Debug)]
-pub(crate) struct Metadata {
+pub struct Metadata {
     /// Name of the specification
     pub name: String,
     /// A description
