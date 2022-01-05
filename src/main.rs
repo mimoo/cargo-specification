@@ -75,7 +75,7 @@ fn main() {
 
     //~ 2. parse the Specification.toml file
     let specification = toml_parser::parse_toml_spec(toml_spec);
-    println!("{:?}", specification);
+    println!("{:#?}", specification);
 
     //~ 3. retrieves the content from all the files listed in the .toml
     let spec_dir = PathBuf::from(toml_spec);

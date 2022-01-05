@@ -2,6 +2,7 @@
 //~ A specification is all the concatenated comments from a list of files
 //~ The list of files is maintained by a Specification.toml file.
 
+use indexmap::IndexMap;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::fs::File;
@@ -16,7 +17,7 @@ pub struct Specification {
     /// information about a specification
     pub metadata: Metadata,
     /// vec of files
-    pub sections: BTreeMap<String, Vec<String>>,
+    pub sections: IndexMap<String, Vec<String>>,
 }
 
 /// Metadata about a specification
