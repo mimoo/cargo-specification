@@ -4,11 +4,29 @@ use std::fmt::Write as FmtWrite;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
+use std::path::Path;
 
 const SPECIFICATION_INSTRUCTION: &str = "spec:";
 
-//~ Parse a file and return the file specification
-pub(crate) fn parse_file(delimiter: &str, file_name: &str) -> String {
+/// Parse a file and return the specification-related content
+pub fn parse_file(delimiter: &str, file_name: &str) -> String {
+    match Path::new(file_name)
+        .extension()
+        .expect("cargo-specification can only parse files that have an extension")
+        .to_str()
+        .expect("couldn't convert the extension to a string")
+    {
+        "md" => {
+            //~ - for markdown files, we retrieve the entire content
+            std::fs::read_to_string(file_name).unwrap_or_else(|e| panic!("{}: {}", e, file_name))
+        }
+        _ => parse_code(delimiter, file_name),
+    }
+}
+
+/// Parse code to return the specification-related content
+/// (comments that start with a special delimiter, by default `~`)
+pub fn parse_code(delimiter: &str, file_name: &str) -> String {
     // state
     let mut print_line = false; // indicates if we're between `//~ spec:startcode` and `//~spec:endcode` statements
     let mut result = String::new();

@@ -12,7 +12,7 @@ use std::io::Read;
 
 /// A specification file contains a specification, as well as sections of (title, text)
 #[derive(Deserialize, Debug)]
-pub(crate) struct SpecificationFile {
+pub struct Specification {
     /// information about a specification
     pub metadata: Metadata,
     /// vec of files
@@ -21,7 +21,7 @@ pub(crate) struct SpecificationFile {
 
 /// Metadata about a specification
 #[derive(Deserialize, Debug)]
-pub(crate) struct Metadata {
+pub struct Metadata {
     /// Name of the specification
     pub name: String,
     /// A description
@@ -35,7 +35,7 @@ pub(crate) struct Metadata {
 //~ spec:endcode
 
 ///
-pub(crate) fn parse_toml_spec(spec_file: &str) -> SpecificationFile {
+pub fn parse_toml_spec(spec_file: &str) -> Specification {
     let mut file = File::open(spec_file).unwrap_or_else(|e| panic!("{}", e));
     let mut content = String::new();
     file.read_to_string(&mut content)
