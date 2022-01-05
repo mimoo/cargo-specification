@@ -49,7 +49,7 @@ pub fn parse_code(delimiter: &str, file_name: &str) -> String {
         }
 
         // if the line starts with //~ parse it
-        let comment = line.split_once(delimiter).unwrap().1.trim();
+        let comment = line.split_once(delimiter).unwrap().1;
 
         // lines starting with `//~ spec:instruction` are specific instructions
         if comment.starts_with(SPECIFICATION_INSTRUCTION) {
@@ -73,6 +73,7 @@ pub fn parse_code(delimiter: &str, file_name: &str) -> String {
             };
         } else {
             // extract the specification text
+            let comment = comment.strip_prefix(' ').unwrap_or(comment);
             writeln!(&mut result, "{}", comment).unwrap();
         }
     }
