@@ -20,9 +20,9 @@ fn main() {
         .author("David W. <davidwg@fb.com>")
         .about("The code is the spec")
         .arg(
-            Arg::with_name("specification-path")
+            Arg::new("specification-path")
                 .help("Sets the path to the required Specification.toml")
-                .short("s")
+                .short('s')
                 .long("specification-path")
                 .default_value("./Specification.toml")
                 .takes_value(true)
@@ -30,36 +30,36 @@ fn main() {
         )
         // TODO: move this in the config
         .arg(
-            Arg::with_name("delimiter")
+            Arg::new("delimiter")
                 .help("Sets the marker that Cargo-specification will recognize, default is //~")
-                .short("d")
+                .short('d')
                 .long("delimiter")
                 .default_value("//~")
                 .takes_value(true)
                 .value_name("PATH"),
         )
         .arg(
-            Arg::with_name("output-file")
+            Arg::new("output-file")
                 .help("destination file for the generated specification")
-                .short("o")
+                .short('o')
                 .long("output-file")
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("output-format")
+            Arg::new("output-format")
                 .help("the format of the specification (respec, markdown, rfc, mdbook, zkdocs, gitbook, etc.)")
-                .short("f")
+                .short('f')
                 .long("output-format")
                 .default_value("markdown")
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("quiet")
-                .short("q")
+            Arg::new("quiet")
+                .short('q')
                 .help("suppress any output to stdout"),
         )
         // `cargo install cargo-specification` won't work without this
-        .arg(Arg::with_name("catch-cargo-cli-bug"))
+        .arg(Arg::new("catch-cargo-cli-bug"))
         .get_matches();
 
     let toml_spec = matches
@@ -75,7 +75,7 @@ fn main() {
 
     //~ 2. parse the Specification.toml file
     let specification = toml_parser::parse_toml_spec(toml_spec);
-    //    println!("{:?}", specification);
+    println!("{:?}", specification);
 
     //~ 3. retrieves the content from all the files listed in the .toml
     let spec_dir = PathBuf::from(toml_spec);
