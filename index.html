@@ -88,10 +88,6 @@
 <p>figures out the spec format</p>
 </li>
 </ol>
-<h2>File parser</h2>
-<ul>
-<li>for markdown files, we retrieve the entire content</li>
-</ul>
 <h2>TOML Parser</h2>
 <p>A specification is all the concatenated comments from a list of files
 The list of files is maintained by a Specification.toml file.</p>
@@ -103,7 +99,7 @@ pub struct Specification {
     /// information about a specification
     pub metadata: Metadata,
     /// vec of files
-    pub sections: BTreeMap&lt;String, Vec&lt;String&gt;&gt;,
+    pub sections: IndexMap&lt;String, Vec&lt;String&gt;&gt;,
 }
 
 /// Metadata about a specification
@@ -120,6 +116,10 @@ pub struct Metadata {
 }
 
 </code></pre>
+<h2>File parser</h2>
+<ul>
+<li>for markdown files, we retrieve the entire content</li>
+</ul>
 
 
 </body>
