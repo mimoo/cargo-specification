@@ -28,60 +28,57 @@ pub fn parse_file(delimiter: &str, file_name: &str) -> String {
 /// (comments that start with a special delimiter, by default `~`)
 pub fn parse_code(delimiter: &str, file_name: &str) -> String {
     // state
-    let mut print_line = false; // indicates if we're between `//~ spec:startcode` and `//~spec:endcode` statements
+    let mut extract_code = false; // indicates if we're between `//~ spec:startcode` and `//~spec:endcode` statements
     let mut result = String::new();
 
     // go over file line by line
-    let mut previous_line_is_part_of_spec = None;
     let file = File::open(file_name).unwrap_or_else(|e| panic!("{}: {}", e, file_name));
     let lines = BufReader::new(file).lines();
     for line in lines {
         let line = line.unwrap();
 
-        if !line.trim().starts_with(delimiter) {
+        // if this is a normal line...
+        if !line.trim_start().starts_with(delimiter) {
             // only print a normal line if it is between `//~ spec:startcode` and `//~spec:endcode` statements
-            // TODO: reset indentation
-            if print_line {
-                writeln!(&mut result, "{}", line).unwrap();
+            if extract_code {
+                // TODO: reset indentation
+                write!(&mut result, "{}", line).unwrap();
             }
-            previous_line_is_part_of_spec = Some(false);
+
             continue;
         }
 
         // if the line starts with //~ parse it
         let comment = line.split_once(delimiter).unwrap().1.trim();
+
+        // lines starting with `//~ spec:instruction` are specific instructions
         if comment.starts_with(SPECIFICATION_INSTRUCTION) {
-            // match on the instruction given in `//~ spec:instruction`
             match comment.split_once(SPECIFICATION_INSTRUCTION).unwrap().1 {
                 // spec:startcode will print every line afterwards, up until a spec:endcode statement
-                "startcode" if !print_line => {
-                    writeln!(&mut result, "```rust").unwrap();
-                    print_line = true;
+                "startcode" if !extract_code => {
+                    write!(&mut result, "```rust").unwrap();
+                    extract_code = true;
                 }
-                "startcode" if print_line => panic!("cannot startcode when already started"),
+                "startcode" if extract_code => panic!("cannot startcode when already started"),
                 // spec:endcode ends spec:startcode
-                "endcode" if print_line => {
-                    writeln!(&mut result, "```").unwrap();
-                    print_line = false;
+                "endcode" if extract_code => {
+                    write!(&mut result, "```").unwrap();
+                    extract_code = false;
                 }
-                "endcode" if !print_line => {
+                "endcode" if !extract_code => {
                     panic!("cannot endcode if haven't startcode before")
                 }
                 //
                 _ => unimplemented!(),
             };
         } else {
-            if let Some(false) = previous_line_is_part_of_spec {
-                writeln!(&mut result, "\n").unwrap();
-            }
-            // if the specification comment is not an instruction, save it
+            // extract the specification text
             writeln!(&mut result, "{}", comment).unwrap();
-            previous_line_is_part_of_spec = Some(true);
         }
     }
 
     // check state is consistent
-    if print_line {
+    if extract_code {
         panic!("a //~ spec:startcode was left open ended");
     }
 
