@@ -75,13 +75,13 @@ fn main() {
 
     //~ 2. parse the Specification.toml file
     let specification = toml_parser::parse_toml_spec(toml_spec);
-    println!("{:?}", specification);
+    //    println!("{:?}", specification);
 
     //~ 3. retrieves the content from all the files listed in the .toml
     let spec_dir = PathBuf::from(toml_spec);
     let mut spec_dir = fs::canonicalize(&spec_dir).unwrap();
     spec_dir.pop();
-    println!("{:?}", spec_dir);
+    //    println!("{:?}", spec_dir);
 
     let files: Vec<&String> = specification.sections.values().flatten().collect();
 

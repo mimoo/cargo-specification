@@ -36,7 +36,7 @@ pub struct Metadata {
 
 ///
 pub fn parse_toml_spec(spec_file: &str) -> Specification {
-    let mut file = File::open(spec_file).unwrap_or_else(|e| panic!("{}", e));
+    let mut file = File::open(spec_file).unwrap_or_else(|e| panic!("cannot open the specification file {}, make sure you pass a specification toml file via --specification-path", e));
     let mut content = String::new();
     file.read_to_string(&mut content)
         .unwrap_or_else(|e| panic!("{}", e));
