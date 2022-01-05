@@ -75,47 +75,16 @@
 	<h2>Cargo-specification</h2>
 <p>The main algorithm:</p>
 <ol>
-<li>
-<p>parse command-line arguments</p>
-</li>
-<li>
-<p>parse the Specification.toml file</p>
-</li>
-<li>
-<p>retrieves the content from all the files listed in the .toml</p>
-</li>
-<li>
-<p>figures out the spec format</p>
-</li>
+<li>parse command-line arguments</li>
+<li>parse the Specification.toml file</li>
+<li>retrieves the content from all the files listed in the .toml</li>
+<li>figures out the spec format</li>
 </ol>
 <h2>TOML Parser</h2>
 <p>A specification is all the concatenated comments from a list of files
-The list of files is maintained by a Specification.toml file.</p>
-<p>Below are the different structures that we use to organize the specification:</p>
-<pre lang="rust"><code>
-/// A specification file contains a specification, as well as sections of (title, text)
-#[derive(Deserialize, Debug)]
-pub struct Specification {
-    /// information about a specification
-    pub metadata: Metadata,
-    /// vec of files
-    pub sections: IndexMap&lt;String, Vec&lt;String&gt;&gt;,
-}
-
-/// Metadata about a specification
-#[derive(Deserialize, Debug)]
-pub struct Metadata {
-    /// Name of the specification
-    pub name: String,
-    /// A description
-    pub description: String,
-    /// Version of the spec
-    pub version: Option&lt;String&gt;,
-    /// Authors, if any
-    pub authors: Vec&lt;String&gt;,
-}
-
-</code></pre>
+The list of files is maintained by a Specification.toml file.
+Below are the different structures that we use to organize the specification:
+<code>rust/// A specification file contains a specification, as well as sections of (title, text)#[derive(Deserialize, Debug)]pub struct Specification {    /// information about a specification    pub metadata: Metadata,    /// vec of files    pub sections: IndexMap&lt;String, Vec&lt;String&gt;&gt;,}/// Metadata about a specification#[derive(Deserialize, Debug)]pub struct Metadata {    /// Name of the specification    pub name: String,    /// A description    pub description: String,    /// Version of the spec    pub version: Option&lt;String&gt;,    /// Authors, if any    pub authors: Vec&lt;String&gt;,}</code></p>
 <h2>File parser</h2>
 <ul>
 <li>for markdown files, we retrieve the entire content</li>
