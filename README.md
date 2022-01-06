@@ -14,7 +14,7 @@ $ cargo specification path/to/Specification.toml -o specification.html
 
 ## How to write a specification?
 
-With cargo-specification, you write your specification in your code!
+With cargo-specification, you write your specification as a markdown file and extract part of your text from your code.
 
 ### Order your specification
 
@@ -27,9 +27,12 @@ name = "Consensus"
 version = "0.1.0"
 authors = ["David Wong"]
 
+[config]
+template = "spec/template.md"
+
 [sections]
-data_structures = ["src/data_structures.rs"]
-abstract_modules = ["src/module1.rs", "src/module2.rs"]
+data_structures = "src/data_structures.rs"
+abstract_modules = "src/module.rs"
 ```
 
 Note that the name of each section is only relevant for clarity in the toml file.

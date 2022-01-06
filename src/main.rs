@@ -1,18 +1,18 @@
 use clap::{App, Arg};
+use serde::Serialize;
 use std::{
+    collections::HashMap,
     fmt::Write as FmtWrite,
     fs::{self},
     path::PathBuf,
 };
-
-//~ ## Cargo-specification
+use tinytemplate::TinyTemplate;
 
 mod comment_parser;
 mod formats;
 mod git;
 mod toml_parser;
 
-//~ The main algorithm:
 fn main() {
     //~ 1. parse command-line arguments
     let matches = App::new("cargo-specification")
@@ -74,31 +74,42 @@ fn main() {
         .expect("must use --output-format option");
 
     //~ 2. parse the Specification.toml file
-    let specification = toml_parser::parse_toml_spec(toml_spec);
+    let mut specification = toml_parser::parse_toml_spec(toml_spec);
     println!("{:#?}", specification);
 
-    //~ 3. retrieves the content from all the files listed in the .toml
+    //~ 3. retrieve the template
+    let template =
+        fs::read_to_string(&specification.config.template).expect("could not read template file");
+
+    //~ 4. retrieve the content from all the files listed in the .toml
     let spec_dir = PathBuf::from(toml_spec);
     let mut spec_dir = fs::canonicalize(&spec_dir).unwrap();
     spec_dir.pop();
-    //    println!("{:?}", spec_dir);
 
-    let files: Vec<&String> = specification.sections.values().flatten().collect();
-
-    let mut content = String::new();
-    for file in files {
+    for (_, filename) in &mut specification.sections {
         let mut path = spec_dir.clone();
-        path.push(file);
-        let res = comment_parser::parse_file(delimiter, path.to_str().unwrap());
-        writeln!(&mut content, "{}", res).unwrap();
+        path.push(&filename);
+        *filename = comment_parser::parse_file(
+            delimiter,
+            path.to_str().expect("couldn't convert path to string"),
+        );
     }
 
-    //~ 4. figures out the spec format
+    //~ 5. render the template
+    let mut tt = TinyTemplate::new();
+    tt.add_template("specification", &template)
+        .unwrap_or_else(|e| panic!("template file can't be parsed: {}", e));
+
+    let rendered = tt
+        .render("specification", &specification)
+        .unwrap_or_else(|e| panic!("template file can't be rendered: {}", e));
+
+    //~ 6. build the spec
     match spec_format {
         "respec" => {
-            formats::respec::build(&specification, &content, output_file);
+            formats::respec::build(&specification, &rendered, output_file);
         }
-        "markdown" => formats::markdown::build(&specification, &content, output_file),
+        "markdown" => formats::markdown::build(&specification, &rendered, output_file),
         x => {
             panic!("spec format {} not supported", x);
         }

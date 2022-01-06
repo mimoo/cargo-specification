@@ -4,7 +4,10 @@ description = "This specification describes how the command-line utility cargo-s
 version = "0.1.0"
 authors = ["David Wong"]
 
+[config]
+template = "spec/template.md"
+
 [sections]
-overview = ["src/main.rs"]
-toml_parser = ["src/toml_parser.rs"]
-parser = ["src/comment_parser.rs"]
+overview = "src/main.rs"
+toml_parser = "src/toml_parser.rs"
+parser = "src/comment_parser.rs"

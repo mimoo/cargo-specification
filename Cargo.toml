@@ -6,9 +6,9 @@ authors = ["David Wong <davidwg@calibra.com>"]
 edition = "2018"
 
 [dependencies]
-serde = { version = "1.0.133", features = ["derive"] } # deserialize toml
-toml = { version = "0.5.8", features = ["preserve_order"] } # deserialize toml
-askama = "0.11.0"     # HTML template
+askama = "0.11.0" # HTML template
 clap = "3.0.1" # CLI
 comrak = "0.12.1" # markdown
-indexmap = { version = "1.7.0", features = ["serde-1"] }
+serde = { version = "1.0.133", features = ["derive"] } # deserialize toml
+tinytemplate = "1.1" # simple template
+toml = { version = "0.5.8", features = ["preserve_order"] } # deserialize toml

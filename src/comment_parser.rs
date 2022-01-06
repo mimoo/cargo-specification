@@ -1,5 +1,3 @@
-//~ ## File parser
-
 use std::fmt::Write as FmtWrite;
 use std::fs::File;
 use std::io::prelude::*;
@@ -10,6 +8,7 @@ const SPECIFICATION_INSTRUCTION: &str = "spec:";
 
 /// Parse a file and return the specification-related content
 pub fn parse_file(delimiter: &str, file_name: &str) -> String {
+    //~ parsing is based on the extension of the file:
     match Path::new(file_name)
         .extension()
         .expect("cargo-specification can only parse files that have an extension")
@@ -20,6 +19,8 @@ pub fn parse_file(delimiter: &str, file_name: &str) -> String {
             //~ - for markdown files, we retrieve the entire content
             std::fs::read_to_string(file_name).unwrap_or_else(|e| panic!("{}: {}", e, file_name))
         }
+        //~ - for other types of files we look for comments starting with a special `delimiter`
+        //~   (by default `~`)
         _ => parse_code(delimiter, file_name),
     }
 }
@@ -42,7 +43,7 @@ pub fn parse_code(delimiter: &str, file_name: &str) -> String {
             // only print a normal line if it is between `//~ spec:startcode` and `//~spec:endcode` statements
             if extract_code {
                 // TODO: reset indentation
-                write!(&mut result, "{}", line).unwrap();
+                writeln!(&mut result, "{}", line).unwrap();
             }
 
             continue;
@@ -52,17 +53,17 @@ pub fn parse_code(delimiter: &str, file_name: &str) -> String {
         let comment = line.split_once(delimiter).unwrap().1;
 
         // lines starting with `//~ spec:instruction` are specific instructions
-        if comment.starts_with(SPECIFICATION_INSTRUCTION) {
+        if comment.trim().starts_with(SPECIFICATION_INSTRUCTION) {
             match comment.split_once(SPECIFICATION_INSTRUCTION).unwrap().1 {
                 // spec:startcode will print every line afterwards, up until a spec:endcode statement
                 "startcode" if !extract_code => {
-                    write!(&mut result, "```rust").unwrap();
+                    writeln!(&mut result, "```rust").unwrap();
                     extract_code = true;
                 }
                 "startcode" if extract_code => panic!("cannot startcode when already started"),
                 // spec:endcode ends spec:startcode
                 "endcode" if extract_code => {
-                    write!(&mut result, "```").unwrap();
+                    writeln!(&mut result, "```").unwrap();
                     extract_code = false;
                 }
                 "endcode" if !extract_code => {
