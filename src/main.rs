@@ -77,14 +77,16 @@ fn main() {
     let mut specification = toml_parser::parse_toml_spec(toml_spec);
     println!("{:#?}", specification);
 
-    //~ 3. retrieve the template
-    let template =
-        fs::read_to_string(&specification.config.template).expect("could not read template file");
-
-    //~ 4. retrieve the content from all the files listed in the .toml
     let spec_dir = PathBuf::from(toml_spec);
     let mut spec_dir = fs::canonicalize(&spec_dir).unwrap();
     spec_dir.pop();
+
+    //~ 3. retrieve the template
+    let mut path = spec_dir.clone();
+    path.push(&specification.config.template);
+    let template = fs::read_to_string(&path).expect("could not read template file");
+
+    //~ 4. retrieve the content from all the files listed in the .toml
 
     for (_, filename) in &mut specification.sections {
         let mut path = spec_dir.clone();
