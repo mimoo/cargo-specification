@@ -1,5 +1,5 @@
 [package]
-name = "specification"
+name = "cargo-spec"
 description = "heyhey"
 version = "0.1.0"
 authors = ["David Wong <davidwg@calibra.com>"]
