@@ -121,8 +121,11 @@ The list of files is maintained by a <code>Specification.toml</code> file.</p>
 <p>parsing is based on the extension of the file:</p>
 <ul>
 <li>for markdown files, we retrieve the entire content</li>
-<li>for other types of files we look for comments starting with a special <code>delimiter</code>
-(by default <code>~</code>)</li>
+<li>for python files we look for comments starting with <code>#~</code></li>
+<li>for other files we look for comments starting with <code>//~</code>
+lines starting with <code>//~ spec:instruction</code> are specific instructions
+a comment starting with <code>//~ spec:startcode</code> will print
+every line afterwards, up until a <code>//~ spec:endcode</code> statement</li>
 </ul>
 
 
