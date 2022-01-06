@@ -1,4 +1,4 @@
-use clap::{App, Arg};
+use clap::{AppSettings, ArgEnum, Parser, Subcommand};
 use serde::Serialize;
 use std::{
     collections::HashMap,
@@ -13,69 +13,80 @@ mod formats;
 mod git;
 mod toml_parser;
 
+/// The different specification format that cargo-spec can output
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
+
+enum OutputFormat {
+    /// Markdown (the default)
+    Markdown,
+
+    /// Respec
+    Respec,
+}
+
+/// The different options that can be passed to this CLI
+#[derive(Debug, Parser)]
+#[clap(author, version, about)]
+struct Cli {
+    /// The path to the specification toml file (defaults to Specification.toml).
+    #[clap(short, long, parse(from_os_str), value_name = "SPEC_PATH")]
+    specification_path: Option<PathBuf>,
+
+    /// The path to the specification file to write
+    /// (defaults to specification.md or specification.html)
+    #[clap(short, long, parse(from_os_str), value_name = "OUTPUT_FILE")]
+    output_file: Option<PathBuf>,
+
+    /// The output format (defaults to markdown)
+    #[clap(short = 'f', long, value_name = "OUTPUT_FORMAT")]
+    #[clap(arg_enum)]
+    output_format: Option<OutputFormat>,
+
+    #[clap(subcommand)]
+    mode: Option<Mode>,
+}
+
+/// There are several subcommands:return an error if it doesn't
+#[derive(Debug, Clone, Copy, Subcommand)]
+enum Mode {
+    /// Create the specification file at the given path.
+    Build,
+
+    /// Watches any listed files in the specification toml file and
+    /// re-create the specification on any changes.
+    Watch,
+
+    /// Useful for CI: makes sure that the generated specification
+    /// matches the given path, otherwise returns an error.
+    CI,
+}
+
 fn main() {
     //~ 1. parse command-line arguments
-    let matches = App::new("cargo-specification")
-        .version("1.0")
-        .author("David W. <davidwg@fb.com>")
-        .about("The code is the spec")
-        .arg(
-            Arg::new("specification-path")
-                .help("Sets the path to the required Specification.toml")
-                .short('s')
-                .long("specification-path")
-                .default_value("./Specification.toml")
-                .takes_value(true)
-                .value_name("PATH"),
-        )
-        // TODO: move this in the config
-        .arg(
-            Arg::new("delimiter")
-                .help("Sets the marker that Cargo-specification will recognize, default is //~")
-                .short('d')
-                .long("delimiter")
-                .default_value("//~")
-                .takes_value(true)
-                .value_name("PATH"),
-        )
-        .arg(
-            Arg::new("output-file")
-                .help("destination file for the generated specification")
-                .short('o')
-                .long("output-file")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::new("output-format")
-                .help("the format of the specification (respec, markdown, rfc, mdbook, zkdocs, gitbook, etc.)")
-                .short('f')
-                .long("output-format")
-                .default_value("markdown")
-                .takes_value(true),
-        )
-        .arg(
-            Arg::new("quiet")
-                .short('q')
-                .help("suppress any output to stdout"),
-        )
-        // `cargo install cargo-specification` won't work without this
-        .arg(Arg::new("catch-cargo-cli-bug"))
-        .get_matches();
+    let args = Cli::parse();
 
-    let toml_spec = matches
-        .value_of("specification-path")
-        .expect("must use --specification-path option");
-    let delimiter = matches
-        .value_of("delimiter")
-        .expect("must use --delimiter option");
-    let output_file = matches.value_of("output-file");
-    let spec_format = matches
-        .value_of("output-format")
-        .expect("must use --output-format option");
+    let toml_spec = args
+        .specification_path
+        .to_owned()
+        .unwrap_or(PathBuf::from("Specification.toml"));
+    let output_format = args.output_format.unwrap_or(OutputFormat::Markdown);
+    let output_file = args.output_file.to_owned();
+    let mode = args.mode.unwrap_or(Mode::Build);
 
+    println!("args: {:?}", args);
+
+    use Mode::*;
+    match mode {
+        Build => build(toml_spec, output_file, output_format),
+        Watch => todo!(),
+        CI => todo!(),
+    };
+}
+
+fn build(toml_spec: PathBuf, output_file: Option<PathBuf>, output_format: OutputFormat) {
     //~ 2. parse the Specification.toml file
-    let mut specification = toml_parser::parse_toml_spec(toml_spec);
-    println!("{:#?}", specification);
+    let mut specification = toml_parser::parse_toml_spec(toml_spec.as_path());
+    println!("specification: {:#?}", specification);
 
     let spec_dir = PathBuf::from(toml_spec);
     let mut spec_dir = fs::canonicalize(&spec_dir).unwrap();
@@ -87,14 +98,11 @@ fn main() {
     let template = fs::read_to_string(&path).expect("could not read template file");
 
     //~ 4. retrieve the content from all the files listed in the .toml
-
     for (_, filename) in &mut specification.sections {
         let mut path = spec_dir.clone();
         path.push(&filename);
-        *filename = comment_parser::parse_file(
-            delimiter,
-            path.to_str().expect("couldn't convert path to string"),
-        );
+        *filename =
+            comment_parser::parse_file(path.to_str().expect("couldn't convert path to string"));
     }
 
     //~ 5. render the template
@@ -107,13 +115,11 @@ fn main() {
         .unwrap_or_else(|e| panic!("template file can't be rendered: {}", e));
 
     //~ 6. build the spec
-    match spec_format {
-        "respec" => {
+    use OutputFormat::*;
+    match output_format {
+        Markdown => formats::markdown::build(&specification, &rendered, output_file),
+        Respec => {
             formats::respec::build(&specification, &rendered, output_file);
-        }
-        "markdown" => formats::markdown::build(&specification, &rendered, output_file),
-        x => {
-            panic!("spec format {} not supported", x);
         }
     }
 }

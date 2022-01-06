@@ -3,7 +3,7 @@ use comrak::{
     markdown_to_html, ComrakExtensionOptions, ComrakOptions, ComrakParseOptions,
     ComrakRenderOptions,
 };
-use std::{fs::File, io::Write as IOWrite};
+use std::{fs::File, io::Write as IOWrite, path::PathBuf};
 
 use crate::toml_parser::Specification;
 
@@ -18,8 +18,8 @@ struct Respec {
     content: String,
 }
 
-pub fn build(specification: &Specification, content: &str, output_file: Option<&str>) {
-    let output_file = output_file.unwrap_or("specification.html");
+pub fn build(specification: &Specification, content: &str, output_file: Option<PathBuf>) {
+    let output_file = output_file.unwrap_or(PathBuf::from("specification.html"));
 
     //~ - converts markdown content to pure HTML
     let content = markdown_to_html(
@@ -66,7 +66,7 @@ pub fn build(specification: &Specification, content: &str, output_file: Option<&
         content: content,
     };
 
-    let mut file = File::create(output_file).unwrap_or_else(|e| panic!("{}", e));
+    let mut file = File::create(&output_file).unwrap_or_else(|e| panic!("{}", e));
     let _ = write!(&mut file, "{}", html_page.render().unwrap()).unwrap();
-    println!("\n=> html output saved at {}", output_file);
+    println!("\n=> html output saved at {}", output_file.display());
 }

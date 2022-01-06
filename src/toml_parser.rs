@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
+use std::path::Path;
 
 //~ spec:startcode
 /// A specification file contains a specification, as well as sections of (title, text)
@@ -36,7 +37,7 @@ pub struct Metadata {
 //~ spec:endcode
 
 /// Parse a `Specification.toml` file into a [Specification] struct.
-pub fn parse_toml_spec(spec_file: &str) -> Specification {
+pub fn parse_toml_spec(spec_file: &Path) -> Specification {
     let mut file = File::open(spec_file).unwrap_or_else(|e| panic!("cannot open the specification file {}, make sure you pass a specification toml file via --specification-path", e));
     let mut content = String::new();
     file.read_to_string(&mut content)

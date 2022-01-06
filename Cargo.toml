@@ -3,12 +3,12 @@ name = "cargo-spec"
 description = "A tool to specify your code."
 version = "0.1.0"
 authors = ["David Wong <david@o1labs.org>"]
-edition = "2018"
+edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
 askama = "0.11.0" # HTML template
-clap = "3.0.1" # CLI
+clap = { version = "3.0.5", features = ["derive"] } # CLI
 comrak = "0.12.1" # markdown
 serde = { version = "1.0.133", features = ["derive"] } # deserialize toml
 tinytemplate = "1.1" # simple template
