@@ -10,6 +10,7 @@ license = "MIT OR Apache-2.0"
 askama = "0.11.0" # HTML template
 clap = { version = "3.0.5", features = ["derive"] } # CLI
 comrak = "0.12.1" # markdown
+notify = "4.0.17" # watch files
 serde = { version = "1.0.133", features = ["derive"] } # deserialize toml
 tinytemplate = "1.1" # simple template
 toml = { version = "0.5.8", features = ["preserve_order"] } # deserialize toml

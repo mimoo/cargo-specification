@@ -1,7 +1,7 @@
 use clap::{AppSettings, ArgEnum, Parser, Subcommand};
 use serde::Serialize;
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fmt::Write as FmtWrite,
     fs::{self},
     path::PathBuf,
@@ -75,37 +75,102 @@ fn main() {
 
     println!("args: {:?}", args);
 
+    //~ 2. depending on the mode:
     use Mode::*;
     match mode {
-        Build => build(toml_spec, output_file, output_format),
-        Watch => todo!(),
-        CI => todo!(),
+        //~   a. the `Build` mode builds the specification
+        Build => build(toml_spec.clone(), output_file.clone(), output_format),
+        //~   b. the `Watch` mode builds the specification on every change
+        Watch => {
+            use notify::{watcher, RecursiveMode, Watcher};
+            use std::sync::mpsc::channel;
+            use std::time::Duration;
+
+            // Create a channel to receive the events.
+            let (tx, rx) = channel();
+
+            // Create a watcher object, delivering debounced events.
+            // The notification back-end is selected based on the platform.
+            let mut watcher = watcher(tx, Duration::from_secs(10)).unwrap();
+
+            let mut files_to_watch = HashSet::new();
+
+            loop {
+                // build and get files to watch
+                let new_files_to_watch =
+                    build(toml_spec.clone(), output_file.clone(), output_format);
+
+                // watch any new files contained in the specification
+                for file in new_files_to_watch.difference(&files_to_watch) {
+                    watcher
+                        .watch(&file, RecursiveMode::NonRecursive)
+                        .unwrap_or_else(|_e| {
+                            panic!("could not find file to watch {}", file.display())
+                        });
+                }
+
+                // unwatch files that are not in the specification
+                for file in files_to_watch.difference(&new_files_to_watch) {
+                    watcher.unwatch(&file).unwrap_or_else(|_e| {
+                        panic!("could not find file to watch {}", file.display())
+                    });
+                }
+
+                match rx.recv() {
+                    Ok(event) => println!("{:?}", event),
+                    Err(e) => panic!("watch error: {:?}", e),
+                }
+            }
+        }
+        //~   c. the CI mode builds the specification and errors out if it doesn't match the given output path
+        //~      this is useful in CI to make sure that the latest specification
+        //~      has been pushed to the repository
+        CI => {
+            todo!();
+
+            // create tmp dir
+
+            // build in tmp dir
+
+            // check if what is built is the same as the result file
+        }
     };
 }
 
-fn build(toml_spec: PathBuf, output_file: Option<PathBuf>, output_format: OutputFormat) {
-    //~ 2. parse the Specification.toml file
+/// Builds the specification and returns a number of files to watch
+fn build(
+    toml_spec: PathBuf,
+    output_file: Option<PathBuf>,
+    output_format: OutputFormat,
+) -> HashSet<PathBuf> {
+    let mut files_to_watch = HashSet::new();
+
+    //~ 3. parse the Specification.toml file
     let mut specification = toml_parser::parse_toml_spec(toml_spec.as_path());
     println!("specification: {:#?}", specification);
 
-    let spec_dir = PathBuf::from(toml_spec);
-    let mut spec_dir = fs::canonicalize(&spec_dir).unwrap();
+    let mut spec_dir =
+        fs::canonicalize(&toml_spec).expect("couldn't canonicalize the specification path");
     spec_dir.pop();
 
-    //~ 3. retrieve the template
+    //~ 4. retrieve the template
     let mut path = spec_dir.clone();
     path.push(&specification.config.template);
+    files_to_watch.insert(path.clone());
+
     let template = fs::read_to_string(&path).expect("could not read template file");
 
-    //~ 4. retrieve the content from all the files listed in the .toml
+    //~ 5. retrieve the content from all the files listed in the .toml
     for (_, filename) in &mut specification.sections {
         let mut path = spec_dir.clone();
         path.push(&filename);
+        files_to_watch.insert(path.clone());
+
         *filename =
             comment_parser::parse_file(path.to_str().expect("couldn't convert path to string"));
     }
 
-    //~ 5. render the template
+    //~ 6. render the template
     let mut tt = TinyTemplate::new();
     tt.add_template("specification", &template)
         .unwrap_or_else(|e| panic!("template file can't be parsed: {}", e));
@@ -114,12 +179,15 @@ fn build(toml_spec: PathBuf, output_file: Option<PathBuf>, output_format: Output
         .render("specification", &specification)
         .unwrap_or_else(|e| panic!("template file can't be rendered: {}", e));
 
-    //~ 6. build the spec
+    //~ 7. build the spec
     use OutputFormat::*;
     match output_format {
         Markdown => formats::markdown::build(&specification, &rendered, output_file),
         Respec => {
             formats::respec::build(&specification, &rendered, output_file);
         }
-    }
+    };
+
+    // return a number of files to watch
+    return files_to_watch;
 }
