@@ -8,13 +8,13 @@ To see it in action, just look at the code in this codebase as well as [the spec
 ## Usage
 
 ```
-$ cargo install cargo-specification
-$ cargo specification path/to/Specification.toml -o specification.html
+$ cargo install cargo-spec
+$ cargo spec -o specification.md
 ```
 
 ## How to write a specification?
 
-With cargo-specification, you write your specification as a markdown file and extract part of your text from your code.
+With cargo-spec, you write your specification as a markdown file and extract part of your text from your code.
 
 ### Order your specification
 
