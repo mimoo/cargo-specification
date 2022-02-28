@@ -1,4 +1,4 @@
-use clap::{ArgEnum, Parser, Subcommand};
+use clap::{ArgEnum, Args, Parser, Subcommand};
 use std::{
     collections::HashSet,
     fs::{self},
@@ -22,10 +22,19 @@ enum OutputFormat {
     Respec,
 }
 
-/// The different options that can be passed to this CLI
+/// To make cargo subcommands work, you need to use `bin_name`,
+/// as well as a subcommand.
 #[derive(Debug, Parser)]
+#[clap(bin_name = "cargo")]
+enum Cli {
+    #[clap(author, version, about)]
+    Spec(Opt),
+}
+
+/// The different options that can be passed to this CLI
+#[derive(Args, Debug)]
 #[clap(author, version, about, bin_name = "cargo")]
-struct Cli {
+struct Opt {
     /// The path to the specification toml file (defaults to Specification.toml).
     #[clap(short, long, parse(from_os_str), value_name = "SPEC_PATH")]
     specification_path: Option<PathBuf>,
@@ -61,7 +70,7 @@ enum Mode {
 
 fn main() {
     //~ 1. parse command-line arguments
-    let args = Cli::parse();
+    let Cli::Spec(args) = Cli::parse();
 
     let toml_spec = args
         .specification_path
