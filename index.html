@@ -77,6 +77,12 @@
 <h2>overview</h2>
 <ol>
 <li>parse command-line arguments</li>
+<li>depending on the mode:
+a. the <code>Build</code> mode builds the specification
+b. the <code>Watch</code> mode builds the specification on every change
+c. the CI mode builds the specification and errors out if it doesn’t match the given output path
+this is useful in CI to make sure that the latest specification
+has been pushed to the repository</li>
 <li>parse the Specification.toml file</li>
 <li>retrieve the template</li>
 <li>retrieve the content from all the files listed in the .toml</li>
@@ -91,8 +97,8 @@ pub struct Specification {
     pub metadata: Metadata,
     /// configuration of the specification
     pub config: Config,
-    /// files to use for the specification&amp;#39;s content
-    pub sections: HashMap&amp;lt;String, String&amp;gt;,
+    /// files to use for the specification's content
+    pub sections: HashMap&lt;String, String&gt;,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -109,9 +115,9 @@ pub struct Metadata {
     /// A description
     pub description: String,
     /// Version of the spec
-    pub version: Option&amp;lt;String&amp;gt;,
+    pub version: Option&lt;String&gt;,
     /// Authors, if any
-    pub authors: Vec&amp;lt;String&amp;gt;,
+    pub authors: Vec&lt;String&gt;,
 }
 </code></pre>
 <h2>Parser</h2>
