@@ -166,8 +166,13 @@ fn build(
     let mut files_to_watch = HashSet::new();
 
     //~ 3. parse the Specification.toml file
-    let mut specification =
-        toml_parser::parse_toml_spec(toml_spec.as_path()).map_err(|e| format!("{}", e))?;
+    let mut specification = toml_parser::parse_toml_spec(toml_spec.as_path()).map_err(|e| {
+        format!(
+            "couldn't find specification at {}: {}",
+            toml_spec.display(),
+            e
+        )
+    })?;
     //    println!("specification: {:#?}", specification);
 
     let mut spec_dir =
@@ -175,12 +180,17 @@ fn build(
     spec_dir.pop();
 
     //~ 4. retrieve the template
-    let mut path = spec_dir.clone();
-    path.push(&specification.config.template);
-    files_to_watch.insert(path.clone());
+    let mut template_path = spec_dir.clone();
+    template_path.push(&specification.config.template);
+    files_to_watch.insert(template_path.clone());
 
-    let template =
-        fs::read_to_string(&path).map_err(|e| format!("could not read template file: {}", e))?;
+    let template = fs::read_to_string(&template_path).map_err(|e| {
+        format!(
+            "could not read template file {}: {}",
+            template_path.display(),
+            e
+        )
+    })?;
 
     //~ 5. retrieve the content from all the files listed in the .toml
     for (_, filename) in &mut specification.sections {
@@ -190,14 +200,19 @@ fn build(
 
         *filename =
             comment_parser::parse_file(path.to_str().expect("couldn't convert path to string"))
-                .map_err(|e| format!("{}", e))?;
+                .map_err(|e| format!("couldn't parse {}: {}", path.display(), e))?;
     }
 
     //~ 6. render the template
     let mut tt = TinyTemplate::new();
     tt.set_default_formatter(&tinytemplate::format_unescaped);
-    tt.add_template("specification", &template)
-        .map_err(|e| format!("template file can't be parsed: {}", e))?;
+    tt.add_template("specification", &template).map_err(|e| {
+        format!(
+            "template file can't be parsed {}: {}",
+            template_path.display(),
+            e
+        )
+    })?;
 
     let rendered = tt
         .render("specification", &specification)
