@@ -1,8 +1,6 @@
-use clap::{AppSettings, ArgEnum, Parser, Subcommand};
-use serde::Serialize;
+use clap::{ArgEnum, Parser, Subcommand};
 use std::{
-    collections::{HashMap, HashSet},
-    fmt::Write as FmtWrite,
+    collections::HashSet,
     fs::{self},
     path::PathBuf,
 };
@@ -73,13 +71,14 @@ fn main() {
     let output_file = args.output_file.to_owned();
     let mode = args.mode.unwrap_or(Mode::Build);
 
-    println!("args: {:?}", args);
+    //    println!("args: {:?}", args);
 
     //~ 2. depending on the mode:
     use Mode::*;
     match mode {
         //~   a. the `Build` mode builds the specification
-        Build => build(toml_spec.clone(), output_file.clone(), output_format),
+        Build => build(toml_spec.clone(), output_file.clone(), output_format)
+            .unwrap_or_else(|e| panic!("{}", e)),
         //~   b. the `Watch` mode builds the specification on every change
         Watch => {
             use notify::{watcher, RecursiveMode, Watcher};
@@ -92,29 +91,41 @@ fn main() {
             // Create a watcher object, delivering debounced events.
             // The notification back-end is selected based on the platform.
             let mut watcher = watcher(tx, Duration::from_secs(10)).unwrap();
+            watcher
+                .watch(toml_spec.clone(), RecursiveMode::NonRecursive)
+                .unwrap_or_else(|_e| {
+                    panic!(
+                        "could not watch specification file: {}",
+                        toml_spec.display()
+                    )
+                });
 
             let mut files_to_watch = HashSet::new();
 
             loop {
                 // build and get files to watch
-                let new_files_to_watch =
-                    build(toml_spec.clone(), output_file.clone(), output_format);
+                match build(toml_spec.clone(), output_file.clone(), output_format) {
+                    Err(e) => println!("error: {}", e),
+                    Ok(new_files_to_watch) => {
+                        // watch any new files contained in the specification
+                        for file in new_files_to_watch.difference(&files_to_watch) {
+                            watcher
+                                .watch(&file, RecursiveMode::NonRecursive)
+                                .unwrap_or_else(|_e| {
+                                    panic!("could not find file to watch {}", file.display())
+                                });
+                        }
 
-                // watch any new files contained in the specification
-                for file in new_files_to_watch.difference(&files_to_watch) {
-                    watcher
-                        .watch(&file, RecursiveMode::NonRecursive)
-                        .unwrap_or_else(|_e| {
-                            panic!("could not find file to watch {}", file.display())
-                        });
-                }
+                        // unwatch files that are not in the specification
+                        for file in files_to_watch.difference(&new_files_to_watch) {
+                            watcher.unwatch(&file).unwrap_or_else(|_e| {
+                                panic!("could not find file to watch {}", file.display())
+                            });
+                        }
 
-                // unwatch files that are not in the specification
-                for file in files_to_watch.difference(&new_files_to_watch) {
-                    watcher.unwatch(&file).unwrap_or_else(|_e| {
-                        panic!("could not find file to watch {}", file.display())
-                    });
-                }
+                        files_to_watch = new_files_to_watch;
+                    }
+                };
 
                 match rx.recv() {
                     Ok(event) => println!("{:?}", event),
@@ -132,7 +143,7 @@ fn main() {
 
             // build in tmp dir
 
-            // check if what is built is the same as the result file
+            // check if what is built is the same as the result file, if not return an error (how to do exit(1) ?)
         }
     };
 }
@@ -142,12 +153,13 @@ fn build(
     toml_spec: PathBuf,
     output_file: Option<PathBuf>,
     output_format: OutputFormat,
-) -> HashSet<PathBuf> {
+) -> Result<HashSet<PathBuf>, String> {
     let mut files_to_watch = HashSet::new();
 
     //~ 3. parse the Specification.toml file
-    let mut specification = toml_parser::parse_toml_spec(toml_spec.as_path());
-    println!("specification: {:#?}", specification);
+    let mut specification =
+        toml_parser::parse_toml_spec(toml_spec.as_path()).map_err(|e| format!("{}", e))?;
+    //    println!("specification: {:#?}", specification);
 
     let mut spec_dir =
         fs::canonicalize(&toml_spec).expect("couldn't canonicalize the specification path");
@@ -158,7 +170,8 @@ fn build(
     path.push(&specification.config.template);
     files_to_watch.insert(path.clone());
 
-    let template = fs::read_to_string(&path).expect("could not read template file");
+    let template =
+        fs::read_to_string(&path).map_err(|e| format!("could not read template file: {}", e))?;
 
     //~ 5. retrieve the content from all the files listed in the .toml
     for (_, filename) in &mut specification.sections {
@@ -167,13 +180,15 @@ fn build(
         files_to_watch.insert(path.clone());
 
         *filename =
-            comment_parser::parse_file(path.to_str().expect("couldn't convert path to string"));
+            comment_parser::parse_file(path.to_str().expect("couldn't convert path to string"))
+                .map_err(|e| format!("{}", e))?;
     }
 
     //~ 6. render the template
     let mut tt = TinyTemplate::new();
+    tt.set_default_formatter(&tinytemplate::format_unescaped);
     tt.add_template("specification", &template)
-        .unwrap_or_else(|e| panic!("template file can't be parsed: {}", e));
+        .map_err(|e| format!("template file can't be parsed: {}", e))?;
 
     let rendered = tt
         .render("specification", &specification)
@@ -189,5 +204,5 @@ fn build(
     };
 
     // return a number of files to watch
-    return files_to_watch;
+    return Ok(files_to_watch);
 }

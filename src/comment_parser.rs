@@ -7,7 +7,7 @@ use std::path::Path;
 const SPECIFICATION_INSTRUCTION: &str = "spec:";
 
 /// Parse a file and return the specification-related content
-pub fn parse_file(file_name: &str) -> String {
+pub fn parse_file(file_name: &str) -> Result<String, std::io::Error> {
     //~ parsing is based on the extension of the file:
     match Path::new(file_name)
         .extension()
@@ -16,9 +16,7 @@ pub fn parse_file(file_name: &str) -> String {
         .expect("couldn't convert the extension to a string")
     {
         //~ - for markdown files, we retrieve the entire content
-        "md" => {
-            std::fs::read_to_string(file_name).unwrap_or_else(|e| panic!("{}: {}", e, file_name))
-        }
+        "md" => std::fs::read_to_string(file_name),
 
         //~ - for python files we look for comments starting with `#~`
         "py" => parse_code("#~", file_name),
@@ -30,13 +28,13 @@ pub fn parse_file(file_name: &str) -> String {
 
 /// Parse code to return the specification-related content
 /// (comments that start with a special delimiter, by default `~`)
-pub fn parse_code(delimiter: &str, file_name: &str) -> String {
+pub fn parse_code(delimiter: &str, file_name: &str) -> Result<String, std::io::Error> {
     // state
     let mut extract_code = false; // indicates if we're between `//~ spec:startcode` and `//~spec:endcode` statements
     let mut result = String::new();
 
     // go over file line by line
-    let file = File::open(file_name).unwrap_or_else(|e| panic!("{}: {}", e, file_name));
+    let file = File::open(file_name)?;
     let lines = BufReader::new(file).lines();
     for (line_number, line) in lines.enumerate() {
         let line = line.unwrap();
@@ -92,5 +90,5 @@ pub fn parse_code(delimiter: &str, file_name: &str) -> String {
     }
 
     // return the result
-    result
+    Ok(result)
 }
