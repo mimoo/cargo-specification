@@ -24,7 +24,7 @@ enum OutputFormat {
 
 /// The different options that can be passed to this CLI
 #[derive(Debug, Parser)]
-#[clap(author, version, about)]
+#[clap(author, version, about, bin_name = "cargo")]
 struct Cli {
     /// The path to the specification toml file (defaults to Specification.toml).
     #[clap(short, long, parse(from_os_str), value_name = "SPEC_PATH")]
