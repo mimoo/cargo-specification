@@ -45,7 +45,7 @@ pub enum SpecError {
         #[source_code]
         src: NamedSource,
 
-        #[label("try spec:startencode or spec:endcode instead")]
+        #[label("try spec:startcode or spec:endcode instead")]
         bad_bit: (usize, usize),
     },
 }
