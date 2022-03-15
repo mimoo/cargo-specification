@@ -1,7 +1,7 @@
 # Cargo spec &emsp; ![](https://img.shields.io/crates/v/cargo-spec.svg)
 
 This is a tool to turn your code into a specification.
-It is language agnostic, but you need Cargo (which you can install via [Rustup](https://rustup.rs/))) to use it.
+It is language agnostic, but you need Cargo (which you can install via [Rustup](https://rustup.rs/)) to use it.
 To see it in action, just look at the code in this codebase, as well as [the spec it produced](https://mimoo.github.io/cargo-specification/).
 
 ## Usage
@@ -151,5 +151,5 @@ jobs:
 
 ## Projects making use of cargo-spec
 
-* cargo-spec ([spec](https://mimoo.github.io/cargo-specification/)))
+* [cargo-spec]() ([spec](https://mimoo.github.io/cargo-specification/))
 * [kimchi](https://github.com/o1-labs/proof-systems/blob/master/book/specifications/README.md) ([spec](https://o1-labs.github.io/proof-systems/specs/kimchi.html))
