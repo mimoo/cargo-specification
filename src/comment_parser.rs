@@ -44,8 +44,13 @@ pub fn parse_code(
     end_comment: Option<&str>,
     file_name: &Path,
 ) -> Result<String> {
-    let mut extract_code = None; // set if we're waiting for an encode instruction
-    let mut in_spec_comment = false; // set if we're within a multi-line in a comment
+    // set to the offset of the startcode if we're waiting for an encode instruction
+    let mut extract_code = None;
+
+    // set to the indentation of the 1st line if we're within a multi-line in a comment
+    let mut in_spec_comment = None;
+
+    // to store the result of extracting doc comments
     let mut result = String::new();
 
     // read file
@@ -57,7 +62,7 @@ pub fn parse_code(
     let mut byte_offset_for_errors = 0;
     for line in source.lines() {
         // if this is a normal line...
-        if !line.trim_start().starts_with(start_comment) && !in_spec_comment {
+        if !line.trim_start().starts_with(start_comment) && in_spec_comment.is_none() {
             // only print a normal line if it is between `//~ spec:startcode` and `//~spec:endcode` statements
             if extract_code.is_some() {
                 // TODO: reset indentation
@@ -69,10 +74,21 @@ pub fn parse_code(
         }
 
         //~ detect spec comment
-        let comment = line.split_once(start_comment).unwrap().1;
+        let comment = if let Some(indentation) = in_spec_comment {
+            let left_trimmed = line.trim_start();
+            let whitespaces_len = line.len() - left_trimmed.len();
+            if indentation > whitespaces_len {
+                left_trimmed
+            } else {
+                println!("indentation: {indentation}, line: {line}");
+                &line[indentation..]
+            }
+        } else {
+            line.split_once(start_comment).unwrap().1
+        };
 
         //~ lines starting with `//~ spec:instruction` are specific instructions
-        if !in_spec_comment && comment.trim().starts_with(SPECIFICATION_INSTRUCTION) {
+        if in_spec_comment.is_none() && comment.trim().starts_with(SPECIFICATION_INSTRUCTION) {
             match comment.split_once(SPECIFICATION_INSTRUCTION).unwrap().1 {
                 //~ a comment starting with `//~ spec:startcode` will print
                 //~ every line afterwards, up until a `//~ spec:endcode` statement
@@ -114,11 +130,15 @@ pub fn parse_code(
             let comment = if let Some(end) = end_comment {
                 if has_end(end, comment) {
                     // either the comment is ending
-                    in_spec_comment = false;
+                    in_spec_comment = None;
                     comment.trim_end_matches(end)
                 } else {
                     // or it goes on to the next line
-                    in_spec_comment = true;
+                    if !in_spec_comment.is_some() {
+                        let offset = line.find(start_comment).unwrap() + start_comment.len();
+                        in_spec_comment = Some(offset);
+                    }
+
                     comment
                 }
             } else {
