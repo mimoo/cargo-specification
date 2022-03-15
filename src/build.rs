@@ -45,7 +45,7 @@ pub fn build(
         .wrap_err_with(|| format!("could not read template {}", template_path.display(),))?;
 
     //~ 5. retrieve the content from all the files listed in the .toml
-    for (_, filename) in &mut specification.sections {
+    for filename in specification.sections.values_mut() {
         let mut path = spec_dir.clone();
         path.push(&filename);
         files_to_watch.insert(path.clone());
@@ -80,7 +80,7 @@ pub fn build(
     };
 
     // return a number of files to watch
-    return Ok(files_to_watch);
+    Ok(files_to_watch)
 }
 
 pub fn watch(toml_spec: PathBuf, output_format: OutputFormat, output_file: Option<PathBuf>) {

@@ -19,7 +19,7 @@ struct Respec {
 }
 
 pub fn build(specification: &Specification, content: &str, output_file: Option<PathBuf>) {
-    let output_file = output_file.unwrap_or(PathBuf::from("specification.html"));
+    let output_file = output_file.unwrap_or_else(|| PathBuf::from("specification.html"));
 
     //~ - converts markdown content to pure HTML
     let content = markdown_to_html(
@@ -68,7 +68,7 @@ pub fn build(specification: &Specification, content: &str, output_file: Option<P
             .as_deref()
             .unwrap_or("")
             .to_string(),
-        content: content,
+        content,
     };
 
     let mut file = File::create(&output_file).unwrap_or_else(|e| panic!("{}", e));

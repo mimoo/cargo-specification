@@ -12,7 +12,7 @@ pub fn parse_file(file_name: &Path) -> Result<String> {
     //~ parsing is based on the extension of the file:
     match Path::new(file_name)
         .extension()
-        .ok_or(SpecError::CantParseFile(file_name.to_path_buf()))?
+        .ok_or_else(|| SpecError::CantParseFile(file_name.to_path_buf()))?
         .to_str()
         .expect("couldn't convert the extension to a string")
     {
@@ -96,7 +96,7 @@ pub fn parse_code(
                 .unwrap()
                 .1
                 // remove anything after the instruction
-                .split(" ")
+                .split(' ')
                 .next()
                 .unwrap();
 
@@ -110,10 +110,11 @@ pub fn parse_code(
                 }
                 "startcode" if extract_code.is_some() => {
                     let column = line.find("startcode").unwrap();
-                    Err(SpecError::DoubleStartcode {
+                    return Err(SpecError::DoubleStartcode {
                         src: NamedSource::new(file_name.to_string_lossy(), source.to_string()),
                         bad_bit: (byte_offset_for_errors + column, "startcode".len()),
-                    })?;
+                    })
+                    .into_diagnostic();
                 }
                 // spec:endcode ends spec:startcode
                 "endcode" if extract_code.is_some() => {
@@ -122,10 +123,11 @@ pub fn parse_code(
                 }
                 "endcode" if extract_code.is_none() => {
                     let column = line.find("endcode").unwrap();
-                    Err(SpecError::MissingStartcode {
+                    return Err(SpecError::MissingStartcode {
                         src: NamedSource::new(file_name.to_string_lossy(), source.to_string()),
                         bad_bit: (byte_offset_for_errors + column, "endcode".len()),
-                    })?;
+                    })
+                    .into_diagnostic();
                 }
                 //
                 _ => {
@@ -143,11 +145,13 @@ pub fn parse_code(
             let comment = if let Some(end) = end_comment {
                 if has_end(end, comment) {
                     // either the comment is ending
+
                     in_spec_comment = None;
                     comment.trim_end_matches(end)
                 } else {
                     // or it goes on to the next line
-                    if !in_spec_comment.is_some() {
+
+                    if in_spec_comment.is_none() {
                         let offset = line.find(start_comment).unwrap() + start_comment.len();
                         in_spec_comment = Some(offset);
                     }
@@ -167,10 +171,11 @@ pub fn parse_code(
 
     // check state is consistent
     if let Some(offset) = extract_code {
-        Err(SpecError::MissingEndcode {
+        return Err(SpecError::MissingEndcode {
             src: NamedSource::new(file_name.to_string_lossy(), source.to_string()),
             bad_bit: (offset, 0),
-        })?;
+        })
+        .into_diagnostic();
     }
 
     // return the result

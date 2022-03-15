@@ -55,7 +55,7 @@ pub fn init(name: Option<String>, path: PathBuf) -> Result<()> {
     }
 
     // create the files
-    let manifest_path = path.clone().join(DEFAULT_MANIFEST);
+    let manifest_path = path.join(DEFAULT_MANIFEST);
     let mut manifest_file = File::create(&manifest_path).into_diagnostic().wrap_err_with(|| format!("cannot create the specification file {}, make sure you pass a specification toml file via --specification-path", manifest_path.display()))?;
 
     let template_path = path.join(DEFAULT_TEMPLATE);
