@@ -79,15 +79,7 @@
 <li>parse command-line arguments</li>
 <li>depending on the mode:
 a. the <code>Build</code> mode builds the specification
-b. the <code>Watch</code> mode builds the specification on every change
-c. the CI mode builds the specification and errors out if it doesn’t match the given output path
-this is useful in CI to make sure that the latest specification
-has been pushed to the repository</li>
-<li>parse the Specification.toml file</li>
-<li>retrieve the template</li>
-<li>retrieve the content from all the files listed in the .toml</li>
-<li>render the template</li>
-<li>build the spec</li>
+b. the <code>Watch</code> mode builds the specification on every change</li>
 </ol>
 <h2>toml_parser</h2>
 <pre lang="rs"><code>/// A specification file contains a specification, as well as sections of (title, text)
@@ -113,7 +105,7 @@ pub struct Metadata {
     /// Name of the specification
     pub name: String,
     /// A description
-    pub description: String,
+    pub description: Option&lt;String&gt;,
     /// Version of the spec
     pub version: Option&lt;String&gt;,
     /// Authors, if any
