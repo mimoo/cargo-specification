@@ -3,6 +3,7 @@
 This is a tool to turn your code into a specification.
 It is language agnostic, but you need Cargo (which you can install via [Rustup](https://rustup.rs/)) to use it.
 To see it in action, just look at the code in this codebase, as well as [the spec it produced](https://mimoo.github.io/cargo-specification/).
+You can read more about the concepts behind it in the blogpost [The code is the specification: introducing cargo-spec](https://cryptologie.net/article/553/the-code-is-the-specification-introducing-cargo-spec/).
 
 ## Usage
 
