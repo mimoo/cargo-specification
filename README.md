@@ -1,4 +1,4 @@
-# Cargo spec &emsp; ![](https://img.shields.io/github/workflow/status/mimoo/cargo-specification/CI/master) ![](https://img.shields.io/crates/v/cargo-spec.svg)
+# Cargo spec &emsp; ![](https://img.shields.io/crates/v/cargo-spec.svg)
 
 This is a tool to use your code in your specifications.
 To see it in action, just look at the code in this codebase, as well as [the spec it produced](https://mimoo.github.io/cargo-specification/).
