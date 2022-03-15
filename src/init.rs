@@ -11,8 +11,8 @@ use std::{
     path::PathBuf,
 };
 
-const DEFAULT_MANIFEST: &str = "Caca.toml";
-const DEFAULT_TEMPLATE: &str = "caca_template.md";
+const DEFAULT_MANIFEST: &str = "Specification.toml";
+const DEFAULT_TEMPLATE: &str = "specification_template.md";
 
 pub fn new(name: String) -> Result<()> {
     let path = env::current_dir().into_diagnostic()?;
@@ -34,7 +34,12 @@ pub fn init(name: Option<String>, path: PathBuf) -> Result<()> {
 
     // if the directory doesn't exist, create it
     if !path.is_dir() {
-        create_dir(&path);
+        create_dir(&path).into_diagnostic().wrap_err_with(|| {
+            format!(
+                "cannot create the specification directory {}",
+                path.display()
+            )
+        })?;
     } else {
         // otherwise make sure there isn't already a spec in there
         let read_dir = path.read_dir().into_diagnostic()?;

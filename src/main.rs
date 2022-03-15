@@ -75,7 +75,8 @@ fn main() -> Result<()> {
             output_file,
             output_format,
         }) => {
-            let toml_spec = specification_path.unwrap_or(PathBuf::from("Specification.toml"));
+            let toml_spec =
+                specification_path.unwrap_or_else(|| PathBuf::from("Specification.toml"));
             let output_format = output_format.unwrap_or(OutputFormat::Markdown);
 
             let _ = build(toml_spec, output_file, output_format)?;
@@ -86,8 +87,9 @@ fn main() -> Result<()> {
             output_file,
             output_format,
         }) => {
-            let toml_spec = specification_path.unwrap_or(PathBuf::from("Specification.toml"));
-            let output_format = output_format.unwrap_or(OutputFormat::Markdown);
+            let toml_spec =
+                specification_path.unwrap_or_else(|| PathBuf::from("Specification.toml"));
+            let output_format = output_format.unwrap_or_else(OutputFormat::Markdown);
 
             watch(toml_spec, output_format, output_file);
         }
