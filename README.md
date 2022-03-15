@@ -116,7 +116,7 @@ struct SomeStruct {
   a: u8,
   b: u64,
 }
-//~ spec:encode
+//~ spec:endcode
 ```
 
 ## Continuous Integration
