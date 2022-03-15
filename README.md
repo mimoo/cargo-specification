@@ -1,3 +1,8 @@
+# Cargo spec &emsp; [![Build Status]][actions] [![Latest Version]][crates.io] [![serde: rustc 1.13+]][Rust 1.13] [![serde_derive: rustc 1.31+]][Rust 1.31]
+
+[Build Status]: https://img.shields.io/github/workflow/status/mimoo/cargo-specification/CI/master
+[Latest Version]: https://img.shields.io/crates/v/cargo-spec.svg
+
 # The code is the spec
 
 This is a tool to use your code in your specifications.
