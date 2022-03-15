@@ -11,8 +11,8 @@ use std::{
     path::PathBuf,
 };
 
-const DEFAULT_MANIFEST: &str = "Specification.toml";
-const DEFAULT_TEMPLATE: &str = "specification_template.md";
+pub const DEFAULT_MANIFEST: &str = "Specification.toml";
+pub const DEFAULT_TEMPLATE: &str = "specification_template.md";
 
 pub fn new(name: String) -> Result<()> {
     let path = env::current_dir().into_diagnostic()?;

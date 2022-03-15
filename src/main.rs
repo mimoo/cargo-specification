@@ -1,6 +1,6 @@
 use build::{build, watch, OutputFormat};
 use clap::{Args, Parser, Subcommand};
-use init::{init, new};
+use init::{init, new, DEFAULT_MANIFEST, DEFAULT_TEMPLATE};
 use miette::Result;
 use std::path::PathBuf;
 
@@ -67,28 +67,42 @@ fn main() -> Result<()> {
 
     //~ 2. depending on the mode:
     match args {
-        Spec::New { name } => new(name)?,
-        Spec::Init { path } => init(None, path)?,
+        Spec::New { name } => {
+            new(name)?;
+
+            println!("Created new specification as {DEFAULT_MANIFEST} and {DEFAULT_TEMPLATE}");
+            println!("You can now run `cargo spec build` to create the specification file");
+        }
+
+        Spec::Init { path } => {
+            init(None, path.clone())?;
+
+            println!("Created new specification at {path}/{DEFAULT_MANIFEST} and {path}/{DEFAULT_TEMPLATE}", path = path.display());
+            println!(
+                "You can now run `cd {path} && cargo spec build` to create the specification file",
+                path = path.display()
+            );
+        }
+
         //~   a. the `Build` mode builds the specification
         Spec::Build(Opt {
             specification_path,
             output_file,
             output_format,
         }) => {
-            let toml_spec =
-                specification_path.unwrap_or_else(|| PathBuf::from("Specification.toml"));
+            let toml_spec = specification_path.unwrap_or_else(|| PathBuf::from(DEFAULT_MANIFEST));
             let output_format = output_format.unwrap_or(OutputFormat::Markdown);
 
             let _ = build(toml_spec, output_file, output_format)?;
         }
+
         //~   b. the `Watch` mode builds the specification on every change
         Spec::Watch(Opt {
             specification_path,
             output_file,
             output_format,
         }) => {
-            let toml_spec =
-                specification_path.unwrap_or_else(|| PathBuf::from("Specification.toml"));
+            let toml_spec = specification_path.unwrap_or_else(|| PathBuf::from(DEFAULT_MANIFEST));
             let output_format = output_format.unwrap_or(OutputFormat::Markdown);
 
             watch(toml_spec, output_format, output_file);
