@@ -12,7 +12,7 @@ pub fn parse_file(file_name: &Path) -> Result<String> {
     //~ parsing is based on the extension of the file:
     match Path::new(file_name)
         .extension()
-        .expect("cargo-specification can only parse files that have an extension")
+        .ok_or(SpecError::CantParseFile(file_name.to_path_buf()))?
         .to_str()
         .expect("couldn't convert the extension to a string")
     {
@@ -71,7 +71,7 @@ pub fn parse_code(delimiter: &str, file_name: &Path) -> Result<String> {
                 "startcode" if extract_code.is_some() => {
                     let column = line.find("startcode").unwrap();
                     Err(SpecError::DoubleStartcode {
-                        src: NamedSource::new(file_name.to_string_lossy(), source.clone()),
+                        src: NamedSource::new(file_name.to_string_lossy(), source.to_string()),
                         bad_bit: (byte_offset_for_errors + column, "startcode".len()),
                     })?;
                 }
@@ -83,7 +83,7 @@ pub fn parse_code(delimiter: &str, file_name: &Path) -> Result<String> {
                 "endcode" if extract_code.is_none() => {
                     let column = line.find("endcode").unwrap();
                     Err(SpecError::MissingStartcode {
-                        src: NamedSource::new(file_name.to_string_lossy(), source.clone()),
+                        src: NamedSource::new(file_name.to_string_lossy(), source.to_string()),
                         bad_bit: (byte_offset_for_errors + column, "endcode".len()),
                     })?;
                 }
@@ -91,7 +91,7 @@ pub fn parse_code(delimiter: &str, file_name: &Path) -> Result<String> {
                 _ => {
                     let column = line.find("spec:").unwrap();
                     Err(SpecError::BadInstruction {
-                        src: NamedSource::new(file_name.to_string_lossy(), source.clone()),
+                        src: NamedSource::new(file_name.to_string_lossy(), source.to_string()),
                         bad_bit: (byte_offset_for_errors + column, 0),
                     })?;
                 }
@@ -108,7 +108,7 @@ pub fn parse_code(delimiter: &str, file_name: &Path) -> Result<String> {
     // check state is consistent
     if let Some(offset) = extract_code {
         Err(SpecError::MissingEndcode {
-            src: NamedSource::new(file_name.to_string_lossy(), source.clone()),
+            src: NamedSource::new(file_name.to_string_lossy(), source.to_string()),
             bad_bit: (offset, 0),
         })?;
     }

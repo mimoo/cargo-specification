@@ -1,8 +1,14 @@
+use std::path::PathBuf;
+
 use miette::{Diagnostic, NamedSource};
 use thiserror::Error;
 
 #[derive(Error, Diagnostic, Debug)]
 pub enum SpecError {
+    #[error("Error parsing file `{0}`")]
+    #[diagnostic(help("cargo-specification can only parse files that have an extension"))]
+    CantParseFile(PathBuf),
+
     #[error("Error parsing file")]
     #[diagnostic(help("missing a startcode instruction before the endcode"))]
     MissingStartcode {
@@ -14,12 +20,12 @@ pub enum SpecError {
     },
 
     #[error("Error parsing file")]
-    #[diagnostic(help("missing an endcode instruction to close the last startcode instruction"))]
+    #[diagnostic(help("missing endcode instruction"))]
     MissingEndcode {
         #[source_code]
         src: NamedSource,
 
-        #[label("This bit here")]
+        #[label("this startcode instruction is not terminated")]
         bad_bit: (usize, usize),
     },
 
@@ -29,7 +35,7 @@ pub enum SpecError {
         #[source_code]
         src: NamedSource,
 
-        #[label("This bit here")]
+        #[label("this startcode instruction is invalid")]
         bad_bit: (usize, usize),
     },
 
@@ -39,9 +45,7 @@ pub enum SpecError {
         #[source_code]
         src: NamedSource,
 
-        #[label(
-            "this instruction is not recognized, try spec:startencode or spec:endcode instead"
-        )]
+        #[label("try spec:startencode or spec:endcode instead")]
         bad_bit: (usize, usize),
     },
 }
