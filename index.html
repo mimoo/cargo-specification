@@ -75,13 +75,21 @@
 	<h1>Cargo-specification</h1>
 <p>author: David Wong</p>
 <h2>overview</h2>
+<p>Building a specification is pretty straight forward. Cargo-spec follows these steps:</p>
 <ol>
-<li>parse command-line arguments</li>
-<li>depending on the mode:
-a. the <code>Build</code> mode builds the specification
-b. the <code>Watch</code> mode builds the specification on every change</li>
+<li>parse the specification file with the <a href="#toml-parser">toml_parser</a></li>
+<li>retrieve the template file</li>
+<li>extract the spec comments from all the files listed using <a href="#comment-parser">comment_parser</a></li>
+<li>render the template</li>
+<li>build the spec. We currently support two different formats:
+<ul>
+<li><a href="https://daringfireball.net/projects/markdown/">markdown</a></li>
+<li><a href="https://github.com/w3c/respec/">respec</a></li>
+</ul>
+</li>
 </ol>
-<h2>toml_parser</h2>
+<h2>Toml parser</h2>
+<p>The toml parser expects a manifest specification file that follows the following configuration:</p>
 <pre lang="rs"><code>/// A specification file contains a specification, as well as sections of (title, text)
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Specification {
@@ -112,21 +120,39 @@ pub struct Metadata {
     pub authors: Vec&lt;String&gt;,
 }
 </code></pre>
-<h2>Parser</h2>
-<p>A specification is all the concatenated comments from a list of files.
-The list of files is maintained by a <code>Specification.toml</code> file.</p>
-<p>Below are the different structures that we use to organize the specification:</p>
+<p>The structures are deserialized using the <a href="https://github.com/toml-lang/toml">toml encoding</a>.</p>
+<h2>Comment parser</h2>
+<p>Any placeholder in the template will get replaced by comments extracted from code.
+The specification manifest file contains the list of these files.</p>
 <p>parsing is based on the extension of the file:</p>
 <ul>
 <li>for markdown files, we retrieve the entire content</li>
 <li>for python files we look for comments starting with <code>#~</code></li>
 <li>for python files we look for comments starting with <code>#~</code></li>
-<li>for other files we look for comments starting with <code>//~</code>
-detect spec comment
-lines starting with <code>//~ spec:instruction</code> are specific instructions
-a comment starting with <code>//~ spec:startcode</code> will print
-every line afterwards, up until a <code>//~ spec:endcode</code> statement</li>
+<li>for other files we look for comments starting with <code>//~</code></li>
 </ul>
+<p>for each file listed by the specification manifest, we follow these steps:</p>
+<ol>
+<li>only print a normal line if it is between <code>//~ spec:startcode</code> and <code>//~spec:endcode</code> statements</li>
+<li>if we are within a multi-line comment, we remove the indentation
+based on the indentation of the first line of the comment</li>
+<li>lines starting with <code>//~ spec:</code> are specific instructions:
+<ul>
+<li>a comment starting with <code>//~ spec:startcode</code> will print
+every line afterwards, up until a <code>//~ spec:endcode</code> statement</li>
+<li>error on any other instructions</li>
+</ul>
+</li>
+<li>if we are not seeing an instruction, extract the specification text
+<ul>
+<li>note that either the comment is ending</li>
+<li>or it goes on to the next line</li>
+</ul>
+</li>
+<li>at the end, make sure that every startcode instruction
+is matched with a endcode instruction</li>
+<li>return the result</li>
+</ol>
 
 
 </body>
