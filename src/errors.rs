@@ -5,6 +5,14 @@ use thiserror::Error;
 
 #[derive(Error, Diagnostic, Debug)]
 pub enum SpecError {
+    #[error("A specification already exist at `{0}`")]
+    #[diagnostic(help("the path you passed already has a specification"))]
+    SpecAlreadyExists(PathBuf),
+
+    #[error("Invalid directory `{0}`")]
+    #[diagnostic(help("the path you passed is invalid"))]
+    BadPath(PathBuf),
+
     #[error("Error parsing file `{0}`")]
     #[diagnostic(help("cargo-specification can only parse files that have an extension"))]
     CantParseFile(PathBuf),

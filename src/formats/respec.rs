@@ -62,7 +62,12 @@ pub fn build(specification: &Specification, content: &str, output_file: Option<P
             .collect(),
         github: "".to_string(),
         short_name: "".to_string(),
-        description: specification.metadata.description.clone(),
+        description: specification
+            .metadata
+            .description
+            .as_deref()
+            .unwrap_or("")
+            .to_string(),
         content: content,
     };
 

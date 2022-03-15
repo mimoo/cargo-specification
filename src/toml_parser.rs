@@ -30,7 +30,7 @@ pub struct Metadata {
     /// Name of the specification
     pub name: String,
     /// A description
-    pub description: String,
+    pub description: Option<String>,
     /// Version of the spec
     pub version: Option<String>,
     /// Authors, if any
