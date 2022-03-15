@@ -14,7 +14,7 @@ jobs:
 
       - name: produce spec
         run: |
-          cargo run -- spec --output-format respec
+          cargo run -- spec build --output-format respec
           mkdir dist
           mv specification.html dist/index.html
 
