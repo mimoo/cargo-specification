@@ -216,7 +216,7 @@ fn build(
     //~ 7. build the spec
     use OutputFormat::*;
     match output_format {
-        Markdown => formats::markdown::build(&specification, &rendered, output_file),
+        Markdown => formats::markdown::build(&rendered, output_file),
         Respec => {
             formats::respec::build(&specification, &rendered, output_file);
         }

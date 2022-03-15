@@ -1,9 +1,5 @@
-use std::path::Path;
-
-use miette::{Diagnostic, NamedSource, SourceCode, SourceSpan};
+use miette::{Diagnostic, NamedSource};
 use thiserror::Error;
-
-pub type Result<T> = std::result::Result<T, SpecError>;
 
 #[derive(Error, Diagnostic, Debug)]
 pub enum SpecError {
