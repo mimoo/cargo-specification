@@ -22,13 +22,13 @@ pub fn parse_file(file_name: &Path) -> Result<String> {
             .wrap_err_with(|| format!("could not read file {}", file_name.display())),
 
         //~ - for python files we look for comments starting with `#~`
-        "py" => parse_code("#~", None, file_name),
+        "py" => parse_code("python", "#~", None, file_name),
 
         //~ - for python files we look for comments starting with `#~`
-        "ml" | "mli" => parse_code("(*~", Some("*)"), file_name),
+        "ml" | "mli" => parse_code("ocaml", "(*~", Some("*)"), file_name),
 
         //~ - for other files we look for comments starting with `//~`
-        _ => parse_code("//~", None, file_name),
+        ext => parse_code(ext, "//~", None, file_name),
     }
 }
 
@@ -40,6 +40,7 @@ fn has_end(end: &str, comment: &str) -> bool {
 /// Parse code to return the specification-related content
 /// (comments that start with a special delimiter, by default `~`)
 pub fn parse_code(
+    lang: &str,
     start_comment: &str,
     end_comment: Option<&str>,
     file_name: &Path,
@@ -80,21 +81,31 @@ pub fn parse_code(
             if indentation > whitespaces_len {
                 left_trimmed
             } else {
-                println!("indentation: {indentation}, line: {line}");
                 &line[indentation..]
             }
         } else {
+            // removing the comment part (result might still have a starting space)
             line.split_once(start_comment).unwrap().1
         };
 
         //~ lines starting with `//~ spec:instruction` are specific instructions
         if in_spec_comment.is_none() && comment.trim().starts_with(SPECIFICATION_INSTRUCTION) {
-            match comment.split_once(SPECIFICATION_INSTRUCTION).unwrap().1 {
+            let instruction = comment
+                // get part after spec:
+                .split_once(SPECIFICATION_INSTRUCTION)
+                .unwrap()
+                .1
+                // remove anything after the instruction
+                .split(" ")
+                .next()
+                .unwrap();
+
+            match instruction {
                 //~ a comment starting with `//~ spec:startcode` will print
                 //~ every line afterwards, up until a `//~ spec:endcode` statement
                 "startcode" if extract_code.is_none() => {
                     let column = line.find("startcode").unwrap();
-                    writeln!(&mut result, "```rust").unwrap();
+                    writeln!(&mut result, "```{lang}").unwrap();
                     extract_code = Some(byte_offset_for_errors + column);
                 }
                 "startcode" if extract_code.is_some() => {
@@ -119,10 +130,12 @@ pub fn parse_code(
                 //
                 _ => {
                     let column = line.find("spec:").unwrap();
+                    let instruction = line.split_once("spec:").unwrap().1;
                     Err(SpecError::BadInstruction {
                         src: NamedSource::new(file_name.to_string_lossy(), source.to_string()),
                         bad_bit: (byte_offset_for_errors + column, 0),
-                    })?;
+                    })
+                    .wrap_err_with(|| format!("the instruction you gave: {instruction}"))?;
                 }
             };
         } else {
