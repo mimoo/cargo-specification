@@ -5,6 +5,7 @@ use miette::{IntoDiagnostic, NamedSource, Result, WrapErr};
 
 use crate::errors::SpecError;
 
+/// The prefix to any spec instructions
 const SPECIFICATION_INSTRUCTION: &str = "spec:";
 
 /// Parse a file and return the specification-related content
@@ -37,6 +38,10 @@ fn has_end(end: &str, comment: &str) -> bool {
     comment.trim().ends_with(end)
 }
 
+//~
+//~ for each file listed by the specification manifest, we follow these steps:
+//~
+
 /// Parse code to return the specification-related content
 /// (comments that start with a special delimiter, by default `~`)
 pub fn parse_code(
@@ -45,7 +50,7 @@ pub fn parse_code(
     end_comment: Option<&str>,
     file_name: &Path,
 ) -> Result<String> {
-    // set to the offset of the startcode if we're waiting for an encode instruction
+    // set to the offset of the startcode if we're waiting for an endcode instruction
     let mut extract_code = None;
 
     // set to the indentation of the 1st line if we're within a multi-line in a comment
@@ -59,12 +64,11 @@ pub fn parse_code(
         .into_diagnostic()
         .wrap_err_with(|| format!("could not read file {}", file_name.display()))?;
 
-    // go over file line by line
+    // go over the file line by line
     let mut byte_offset_for_errors = 0;
     for line in source.lines() {
-        // if this is a normal line...
+        //~ 1. only print a normal line if it is between `//~ spec:startcode` and `//~spec:endcode` statements
         if !line.trim_start().starts_with(start_comment) && in_spec_comment.is_none() {
-            // only print a normal line if it is between `//~ spec:startcode` and `//~spec:endcode` statements
             if extract_code.is_some() {
                 // TODO: reset indentation
                 writeln!(&mut result, "{}", line).unwrap();
@@ -74,7 +78,8 @@ pub fn parse_code(
             continue;
         }
 
-        //~ detect spec comment
+        //~ 2. if we are within a multi-line comment, we remove the indentation
+        //~   based on the indentation of the first line of the comment
         let comment = if let Some(indentation) = in_spec_comment {
             let left_trimmed = line.trim_start();
             let whitespaces_len = line.len() - left_trimmed.len();
@@ -84,11 +89,12 @@ pub fn parse_code(
                 &line[indentation..]
             }
         } else {
-            // removing the comment part (result might still have a starting space)
+            // 3. otherwise, we extract what comes after the comment delimiter
+            //   (note that the result might still have a starting space)
             line.split_once(start_comment).unwrap().1
         };
 
-        //~ lines starting with `//~ spec:instruction` are specific instructions
+        //~ 4. lines starting with `//~ spec:` are specific instructions:
         if in_spec_comment.is_none() && comment.trim().starts_with(SPECIFICATION_INSTRUCTION) {
             let instruction = comment
                 // get part after spec:
@@ -101,8 +107,8 @@ pub fn parse_code(
                 .unwrap();
 
             match instruction {
-                //~ a comment starting with `//~ spec:startcode` will print
-                //~ every line afterwards, up until a `//~ spec:endcode` statement
+                //~     - a comment starting with `//~ spec:startcode` will print
+                //~       every line afterwards, up until a `//~ spec:endcode` statement
                 "startcode" if extract_code.is_none() => {
                     let column = line.find("startcode").unwrap();
                     writeln!(&mut result, "```{lang}").unwrap();
@@ -129,7 +135,7 @@ pub fn parse_code(
                     })
                     .into_diagnostic();
                 }
-                //
+                //~     - error on any other instructions
                 _ => {
                     let column = line.find("spec:").unwrap();
                     let instruction = line.split_once("spec:").unwrap().1;
@@ -141,15 +147,15 @@ pub fn parse_code(
                 }
             };
         } else {
-            // extract the specification text
+            //~ 5. if we are not seeing an instruction, extract the specification text
             let comment = if let Some(end) = end_comment {
                 if has_end(end, comment) {
-                    // either the comment is ending
+                    //~     - note that either the comment is ending
 
                     in_spec_comment = None;
                     comment.trim_end_matches(end)
                 } else {
-                    // or it goes on to the next line
+                    //~     - or it goes on to the next line
 
                     if in_spec_comment.is_none() {
                         let offset = line.find(start_comment).unwrap() + start_comment.len();
@@ -169,7 +175,8 @@ pub fn parse_code(
         byte_offset_for_errors += line.len() + 1; // +1 for the newline character
     }
 
-    // check state is consistent
+    //~ 6. at the end, make sure that every startcode instruction
+    //~    is matched with a endcode instruction
     if let Some(offset) = extract_code {
         return Err(SpecError::MissingEndcode {
             src: NamedSource::new(file_name.to_string_lossy(), source.to_string()),
@@ -178,6 +185,6 @@ pub fn parse_code(
         .into_diagnostic();
     }
 
-    // return the result
+    //~ 7. return the result
     Ok(result)
 }

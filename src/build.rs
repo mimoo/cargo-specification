@@ -27,15 +27,14 @@ pub fn build(
 ) -> Result<HashSet<PathBuf>> {
     let mut files_to_watch = HashSet::new();
 
-    //~ 3. parse the Specification.toml file
+    //~ 1. parse the specification file with the [toml_parser](#toml-parser)
     let mut specification = toml_parser::parse_toml_spec(toml_spec.as_path())?;
-    //    println!("specification: {:#?}", specification);
 
     let mut spec_dir =
         fs::canonicalize(&toml_spec).expect("couldn't canonicalize the specification path");
     spec_dir.pop();
 
-    //~ 4. retrieve the template
+    //~ 2. retrieve the template file
     let mut template_path = spec_dir.clone();
     template_path.push(&specification.config.template);
     files_to_watch.insert(template_path.clone());
@@ -44,7 +43,7 @@ pub fn build(
         .into_diagnostic()
         .wrap_err_with(|| format!("could not read template {}", template_path.display(),))?;
 
-    //~ 5. retrieve the content from all the files listed in the .toml
+    //~ 3. extract the spec comments from all the files listed using [comment_parser](#comment-parser)
     for filename in specification.sections.values_mut() {
         let mut path = spec_dir.clone();
         path.push(&filename);
@@ -53,7 +52,7 @@ pub fn build(
         *filename = comment_parser::parse_file(&path)?;
     }
 
-    //~ 6. render the template
+    //~ 4. render the template
     let mut tt = TinyTemplate::new();
     tt.set_default_formatter(&tinytemplate::format_unescaped);
     tt.add_template("specification", &template)
@@ -70,16 +69,18 @@ pub fn build(
             )
         })?;
 
-    //~ 7. build the spec
+    //~ 5. build the spec. We currently support two different formats:
     use OutputFormat::*;
     match output_format {
+        //~     - [markdown](https://daringfireball.net/projects/markdown/)
         Markdown => formats::markdown::build(&rendered, output_file),
+        //~     - [respec](https://github.com/w3c/respec/)
         Respec => {
             formats::respec::build(&specification, &rendered, output_file);
         }
     };
 
-    // return a number of files to watch
+    // return a number of files to watch (useful for the [watch] function)
     Ok(files_to_watch)
 }
 

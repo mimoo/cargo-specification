@@ -8,6 +8,6 @@ authors = ["David Wong"]
 template = "spec/template.md"
 
 [sections]
-overview = "src/main.rs"
+build = "src/build.rs"
 toml_parser = "src/toml_parser.rs"
 parser = "src/comment_parser.rs"

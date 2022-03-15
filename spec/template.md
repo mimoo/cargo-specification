@@ -4,18 +4,21 @@ author: {metadata.authors.0}
 
 ## overview
 
-{sections.overview}
+Building a specification is pretty straight forward. Cargo-spec follows these steps:
 
-## toml_parser
+{sections.build}
+
+## Toml parser
+
+The toml parser expects a manifest specification file that follows the following configuration:
 
 {sections.toml_parser}
 
-## Parser
+The structures are deserialized using the [toml encoding](https://github.com/toml-lang/toml).
 
-A specification is all the concatenated comments from a list of files.
-The list of files is maintained by a `Specification.toml` file.
+## Comment parser
 
-Below are the different structures that we use to organize the specification:
+Any placeholder in the template will get replaced by comments extracted from code.
+The specification manifest file contains the list of these files.
 
 {sections.parser}
-
