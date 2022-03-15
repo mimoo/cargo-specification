@@ -1,8 +1,8 @@
 use build::{build, watch, OutputFormat};
 use clap::{Args, Parser, Subcommand};
 use init::{init, new};
-use miette::{IntoDiagnostic, Result};
-use std::{env, path::PathBuf};
+use miette::Result;
+use std::path::PathBuf;
 
 mod build;
 mod comment_parser;
@@ -89,7 +89,7 @@ fn main() -> Result<()> {
         }) => {
             let toml_spec =
                 specification_path.unwrap_or_else(|| PathBuf::from("Specification.toml"));
-            let output_format = output_format.unwrap_or_else(OutputFormat::Markdown);
+            let output_format = output_format.unwrap_or(OutputFormat::Markdown);
 
             watch(toml_spec, output_format, output_file);
         }

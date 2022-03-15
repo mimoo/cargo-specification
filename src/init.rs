@@ -44,15 +44,12 @@ pub fn init(name: Option<String>, path: PathBuf) -> Result<()> {
         // otherwise make sure there isn't already a spec in there
         let read_dir = path.read_dir().into_diagnostic()?;
 
-        for dir_entry in read_dir {
-            if let Ok(dir_entry) = dir_entry {
-                let spec_file_detected =
-                    dir_entry.file_name().to_string_lossy() == DEFAULT_MANIFEST;
-                let template_file_detected =
-                    dir_entry.file_name().to_string_lossy() == DEFAULT_TEMPLATE;
-                if spec_file_detected || template_file_detected {
-                    return Err(SpecError::SpecAlreadyExists(path)).into_diagnostic();
-                }
+        for dir_entry in read_dir.flatten() {
+            let spec_file_detected = dir_entry.file_name().to_string_lossy() == DEFAULT_MANIFEST;
+            let template_file_detected =
+                dir_entry.file_name().to_string_lossy() == DEFAULT_TEMPLATE;
+            if spec_file_detected || template_file_detected {
+                return Err(SpecError::SpecAlreadyExists(path)).into_diagnostic();
             }
         }
     }
@@ -61,7 +58,7 @@ pub fn init(name: Option<String>, path: PathBuf) -> Result<()> {
     let manifest_path = path.clone().join(DEFAULT_MANIFEST);
     let mut manifest_file = File::create(&manifest_path).into_diagnostic().wrap_err_with(|| format!("cannot create the specification file {}, make sure you pass a specification toml file via --specification-path", manifest_path.display()))?;
 
-    let template_path = path.clone().join(DEFAULT_TEMPLATE);
+    let template_path = path.join(DEFAULT_TEMPLATE);
     let mut template_file = File::create(&template_path).into_diagnostic().wrap_err_with(|| format!("cannot create the specification template file {}, make sure you pass a specification toml file via --specification-path", template_path.display()))?;
 
     // fill the specification manifest

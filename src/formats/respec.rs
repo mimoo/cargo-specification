@@ -23,7 +23,7 @@ pub fn build(specification: &Specification, content: &str, output_file: Option<P
 
     //~ - converts markdown content to pure HTML
     let content = markdown_to_html(
-        &content,
+        content,
         &ComrakOptions {
             extension: ComrakExtensionOptions {
                 strikethrough: true,
