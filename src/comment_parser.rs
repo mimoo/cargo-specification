@@ -1,13 +1,14 @@
 use std::fmt::Write as FmtWrite;
-use std::fs::File;
-use std::io::prelude::*;
-use std::io::BufReader;
 use std::path::Path;
+
+use miette::{IntoDiagnostic, NamedSource, Result, WrapErr};
+
+use crate::errors::SpecError;
 
 const SPECIFICATION_INSTRUCTION: &str = "spec:";
 
 /// Parse a file and return the specification-related content
-pub fn parse_file(file_name: &str) -> Result<String, std::io::Error> {
+pub fn parse_file(file_name: &Path) -> Result<String> {
     //~ parsing is based on the extension of the file:
     match Path::new(file_name)
         .extension()
@@ -16,7 +17,9 @@ pub fn parse_file(file_name: &str) -> Result<String, std::io::Error> {
         .expect("couldn't convert the extension to a string")
     {
         //~ - for markdown files, we retrieve the entire content
-        "md" => std::fs::read_to_string(file_name),
+        "md" => std::fs::read_to_string(file_name)
+            .into_diagnostic()
+            .wrap_err_with(|| format!("could not read file {}", file_name.display())),
 
         //~ - for python files we look for comments starting with `#~`
         "py" => parse_code("#~", file_name),
@@ -28,25 +31,27 @@ pub fn parse_file(file_name: &str) -> Result<String, std::io::Error> {
 
 /// Parse code to return the specification-related content
 /// (comments that start with a special delimiter, by default `~`)
-pub fn parse_code(delimiter: &str, file_name: &str) -> Result<String, std::io::Error> {
+pub fn parse_code(delimiter: &str, file_name: &Path) -> Result<String> {
     // state
-    let mut extract_code = false; // indicates if we're between `//~ spec:startcode` and `//~spec:endcode` statements
+    let mut extract_code = None; // indicates if we're between `//~ spec:startcode` and `//~spec:endcode` statements
     let mut result = String::new();
 
-    // go over file line by line
-    let file = File::open(file_name)?;
-    let lines = BufReader::new(file).lines();
-    for (line_number, line) in lines.enumerate() {
-        let line = line.unwrap();
+    let source = std::fs::read_to_string(file_name)
+        .into_diagnostic()
+        .wrap_err_with(|| format!("could not read file {}", file_name.display()))?;
 
+    // go over file line by line
+    let mut byte_offset_for_errors = 0;
+    for line in source.lines() {
         // if this is a normal line...
         if !line.trim_start().starts_with(delimiter) {
             // only print a normal line if it is between `//~ spec:startcode` and `//~spec:endcode` statements
-            if extract_code {
+            if extract_code.is_some() {
                 // TODO: reset indentation
                 writeln!(&mut result, "{}", line).unwrap();
             }
 
+            byte_offset_for_errors += line.len() + 1; // +1 for the newline character
             continue;
         }
 
@@ -58,35 +63,54 @@ pub fn parse_code(delimiter: &str, file_name: &str) -> Result<String, std::io::E
             match comment.split_once(SPECIFICATION_INSTRUCTION).unwrap().1 {
                 //~ a comment starting with `//~ spec:startcode` will print
                 //~ every line afterwards, up until a `//~ spec:endcode` statement
-                "startcode" if !extract_code => {
+                "startcode" if extract_code.is_none() => {
+                    let column = line.find("startcode").unwrap();
                     writeln!(&mut result, "```rust").unwrap();
-                    extract_code = true;
+                    extract_code = Some(byte_offset_for_errors + column);
                 }
-                "startcode" if extract_code => panic!("cannot startcode when already started"),
+                "startcode" if extract_code.is_some() => {
+                    let column = line.find("startcode").unwrap();
+                    Err(SpecError::DoubleStartcode {
+                        src: NamedSource::new(file_name.to_string_lossy(), source.clone()),
+                        bad_bit: (byte_offset_for_errors + column, "startcode".len()),
+                    })?;
+                }
                 // spec:endcode ends spec:startcode
-                "endcode" if extract_code => {
+                "endcode" if extract_code.is_some() => {
                     writeln!(&mut result, "```").unwrap();
-                    extract_code = false;
+                    extract_code = None;
                 }
-                "endcode" if !extract_code => {
-                    panic!("cannot endcode if haven't startcode before")
+                "endcode" if extract_code.is_none() => {
+                    let column = line.find("endcode").unwrap();
+                    Err(SpecError::MissingStartcode {
+                        src: NamedSource::new(file_name.to_string_lossy(), source.clone()),
+                        bad_bit: (byte_offset_for_errors + column, "endcode".len()),
+                    })?;
                 }
                 //
-                _ => panic!(
-                    "instruction not recognized in {}:{}\n instruction: {}",
-                    file_name, line_number, line
-                ),
+                _ => {
+                    let column = line.find("spec:").unwrap();
+                    Err(SpecError::BadInstruction {
+                        src: NamedSource::new(file_name.to_string_lossy(), source.clone()),
+                        bad_bit: (byte_offset_for_errors + column, 0),
+                    })?;
+                }
             };
         } else {
             // extract the specification text
             let comment = comment.strip_prefix(' ').unwrap_or(comment);
             writeln!(&mut result, "{}", comment).unwrap();
         }
+
+        byte_offset_for_errors += line.len() + 1; // +1 for the newline character
     }
 
     // check state is consistent
-    if extract_code {
-        panic!("a //~ spec:startcode was left open ended");
+    if let Some(offset) = extract_code {
+        Err(SpecError::MissingEndcode {
+            src: NamedSource::new(file_name.to_string_lossy(), source.clone()),
+            bad_bit: (offset, 0),
+        })?;
     }
 
     // return the result

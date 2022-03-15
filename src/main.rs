@@ -1,4 +1,5 @@
 use clap::{ArgEnum, Args, Parser, Subcommand};
+use miette::{IntoDiagnostic, Result, WrapErr};
 use std::{
     collections::HashSet,
     fs::{self},
@@ -7,6 +8,7 @@ use std::{
 use tinytemplate::TinyTemplate;
 
 mod comment_parser;
+mod errors;
 mod formats;
 mod git;
 mod toml_parser;
@@ -68,7 +70,7 @@ enum Mode {
     CI,
 }
 
-fn main() {
+fn main() -> Result<()> {
     //~ 1. parse command-line arguments
     let Cli::Spec(args) = Cli::parse();
 
@@ -86,8 +88,9 @@ fn main() {
     use Mode::*;
     match mode {
         //~   a. the `Build` mode builds the specification
-        Build => build(toml_spec.clone(), output_file.clone(), output_format)
-            .unwrap_or_else(|e| panic!("{}", e)),
+        Build => {
+            let _ = build(toml_spec.clone(), output_file.clone(), output_format)?;
+        }
         //~   b. the `Watch` mode builds the specification on every change
         Watch => {
             use notify::{watcher, RecursiveMode, Watcher};
@@ -155,6 +158,8 @@ fn main() {
             // check if what is built is the same as the result file, if not return an error (how to do exit(1) ?)
         }
     };
+
+    Ok(())
 }
 
 /// Builds the specification and returns a number of files to watch
@@ -162,17 +167,11 @@ fn build(
     toml_spec: PathBuf,
     output_file: Option<PathBuf>,
     output_format: OutputFormat,
-) -> Result<HashSet<PathBuf>, String> {
+) -> Result<HashSet<PathBuf>> {
     let mut files_to_watch = HashSet::new();
 
     //~ 3. parse the Specification.toml file
-    let mut specification = toml_parser::parse_toml_spec(toml_spec.as_path()).map_err(|e| {
-        format!(
-            "couldn't find specification at {}: {}",
-            toml_spec.display(),
-            e
-        )
-    })?;
+    let mut specification = toml_parser::parse_toml_spec(toml_spec.as_path())?;
     //    println!("specification: {:#?}", specification);
 
     let mut spec_dir =
@@ -184,13 +183,9 @@ fn build(
     template_path.push(&specification.config.template);
     files_to_watch.insert(template_path.clone());
 
-    let template = fs::read_to_string(&template_path).map_err(|e| {
-        format!(
-            "could not read template file {}: {}",
-            template_path.display(),
-            e
-        )
-    })?;
+    let template = fs::read_to_string(&template_path)
+        .into_diagnostic()
+        .wrap_err_with(|| format!("could not read template {}", template_path.display(),))?;
 
     //~ 5. retrieve the content from all the files listed in the .toml
     for (_, filename) in &mut specification.sections {
@@ -198,25 +193,25 @@ fn build(
         path.push(&filename);
         files_to_watch.insert(path.clone());
 
-        *filename =
-            comment_parser::parse_file(path.to_str().expect("couldn't convert path to string"))
-                .map_err(|e| format!("couldn't parse {}: {}", path.display(), e))?;
+        *filename = comment_parser::parse_file(&path)?;
     }
 
     //~ 6. render the template
     let mut tt = TinyTemplate::new();
     tt.set_default_formatter(&tinytemplate::format_unescaped);
-    tt.add_template("specification", &template).map_err(|e| {
-        format!(
-            "template file can't be parsed {}: {}",
-            template_path.display(),
-            e
-        )
-    })?;
+    tt.add_template("specification", &template)
+        .into_diagnostic()
+        .wrap_err_with(|| format!("can't parse template {}", template_path.display(),))?;
 
     let rendered = tt
         .render("specification", &specification)
-        .unwrap_or_else(|e| panic!("template file can't be rendered: {}", e));
+        .into_diagnostic()
+        .wrap_err_with(|| {
+            format!(
+                "template file can't be rendered: {}",
+                template_path.display()
+            )
+        })?;
 
     //~ 7. build the spec
     use OutputFormat::*;
