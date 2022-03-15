@@ -1,9 +1,4 @@
-# Cargo spec &emsp; [![Build Status]][actions] [![Latest Version]][crates.io] [![serde: rustc 1.13+]][Rust 1.13] [![serde_derive: rustc 1.31+]][Rust 1.31]
-
-[Build Status]: https://img.shields.io/github/workflow/status/mimoo/cargo-specification/CI/master
-[Latest Version]: https://img.shields.io/crates/v/cargo-spec.svg
-
-# The code is the spec
+# Cargo spec &emsp; ![](https://img.shields.io/github/workflow/status/mimoo/cargo-specification/CI/master) ![](https://img.shields.io/crates/v/cargo-spec.svg)
 
 This is a tool to use your code in your specifications.
 To see it in action, just look at the code in this codebase, as well as [the spec it produced](https://mimoo.github.io/cargo-specification/).
@@ -126,4 +121,4 @@ jobs:
 
 ## Projects making use of cargo-spec
 
-* [kimchi](https://github.com/o1-labs/proof-systems/blob/master/book/specifications/README.md)
+* [kimchi](https://github.com/o1-labs/proof-systems/blob/master/book/specifications/README.md) ([spec](https://o1-labs.github.io/proof-systems/specs/kimchi.html))
