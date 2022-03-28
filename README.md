@@ -154,3 +154,7 @@ jobs:
 
 * [cargo-spec]() ([spec](https://mimoo.github.io/cargo-specification/))
 * [kimchi](https://github.com/o1-labs/proof-systems/blob/master/book/specifications/README.md) ([spec](https://o1-labs.github.io/proof-systems/specs/kimchi.html))
+
+## License
+
+The Cargo spec Project is dual-licensed under Apache 2.0 and MIT terms. See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for details.
