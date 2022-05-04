@@ -81,13 +81,12 @@
 <li>retrieve the template file</li>
 <li>extract the spec comments from all the files listed using <a href="#comment-parser">comment_parser</a></li>
 <li>render the template</li>
-<li>build the spec. We currently support two different formats:
+<li>build the spec. We currently support two different formats:</li>
+</ol>
 <ul>
 <li><a href="https://daringfireball.net/projects/markdown/">markdown</a></li>
 <li><a href="https://github.com/w3c/respec/">respec</a></li>
 </ul>
-</li>
-</ol>
 <h2>Toml parser</h2>
 <p>The toml parser expects a manifest specification file that follows the following configuration:</p>
 <pre lang="rs"><code>/// A specification file contains a specification, as well as sections of (title, text)
@@ -136,6 +135,8 @@ The specification manifest file contains the list of these files.</p>
 <li>only print a normal line if it is between <code>//~ spec:startcode</code> and <code>//~spec:endcode</code> statements</li>
 <li>if we are within a multi-line comment, we remove the indentation
 based on the indentation of the first line of the comment</li>
+<li>otherwise, we extract what comes after the comment delimiter
+(note that the result might still have a starting space)</li>
 <li>lines starting with <code>//~ spec:</code> are specific instructions:
 <ul>
 <li>a comment starting with <code>//~ spec:startcode</code> will print
@@ -143,12 +144,17 @@ every line afterwards, up until a <code>//~ spec:endcode</code> statement</li>
 <li>error on any other instructions</li>
 </ul>
 </li>
-<li>if we are not seeing an instruction, extract the specification text
+<li>if we are not seeing an instruction, figure out if:
 <ul>
-<li>note that either the comment is ending</li>
-<li>or it goes on to the next line</li>
+<li>the comment is ending</li>
+<li>or goes on to the next line</li>
 </ul>
 </li>
+<li>Finally, extract the specification text.
+Each <code>~</code> at the start of the comment,
+not including the first one,
+is converted to a tab.
+This allows us to write <code>//~~ *</code> for nested list items.</li>
 <li>at the end, make sure that every startcode instruction
 is matched with a endcode instruction</li>
 <li>return the result</li>
