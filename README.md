@@ -3,6 +3,7 @@
 This is a tool to turn your code into a specification.
 It is language agnostic, but you need Cargo (which you can install via [Rustup](https://rustup.rs/)) to use it.
 To see it in action, just look at the code in this codebase, as well as [the spec it produced](https://mimoo.github.io/cargo-specification/).
+You can read more about the concepts behind it in the blogpost [The code is the specification: introducing cargo-spec](https://cryptologie.net/article/553/the-code-is-the-specification-introducing-cargo-spec/).
 
 ## Usage
 
@@ -131,7 +132,7 @@ struct SomeStruct {
   a: u8,
   b: u64,
 }
-//~ spec:encode
+//~ spec:endcode
 ```
 
 ## Continuous Integration
@@ -169,3 +170,7 @@ jobs:
 
 * [cargo-spec]() ([spec](https://mimoo.github.io/cargo-specification/))
 * [kimchi](https://github.com/o1-labs/proof-systems/blob/master/book/specifications/README.md) ([spec](https://o1-labs.github.io/proof-systems/specs/kimchi.html))
+
+## License
+
+The Cargo spec Project is dual-licensed under Apache 2.0 and MIT terms. See [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT) for details.

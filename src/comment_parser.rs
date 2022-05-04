@@ -25,7 +25,7 @@ pub fn parse_file(file_name: &Path) -> Result<String> {
         //~ - for python files we look for comments starting with `#~`
         "py" => parse_code("python", "#~", None, file_name),
 
-        //~ - for python files we look for comments starting with `#~`
+        //~ - for ML files we look for comments starting with `#~`
         "ml" | "mli" => parse_code("ocaml", "(*~", Some("*)"), file_name),
 
         //~ - for other files we look for comments starting with `//~`
