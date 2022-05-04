@@ -89,8 +89,8 @@ pub fn parse_code(
                 &line[indentation..]
             }
         } else {
-            // 3. otherwise, we extract what comes after the comment delimiter
-            //   (note that the result might still have a starting space)
+            //~ 3. otherwise, we extract what comes after the comment delimiter
+            //~   (note that the result might still have a starting space)
             line.split_once(start_comment).unwrap().1
         };
 
@@ -107,7 +107,7 @@ pub fn parse_code(
                 .unwrap();
 
             match instruction {
-                //~     - a comment starting with `//~ spec:startcode` will print
+                //~~ - a comment starting with `//~ spec:startcode` will print
                 //~       every line afterwards, up until a `//~ spec:endcode` statement
                 "startcode" if extract_code.is_none() => {
                     let column = line.find("startcode").unwrap();
@@ -135,7 +135,7 @@ pub fn parse_code(
                     })
                     .into_diagnostic();
                 }
-                //~     - error on any other instructions
+                //~~ - error on any other instructions
                 _ => {
                     let column = line.find("spec:").unwrap();
                     let instruction = line.split_once("spec:").unwrap().1;
@@ -147,15 +147,15 @@ pub fn parse_code(
                 }
             };
         } else {
-            //~ 5. if we are not seeing an instruction, extract the specification text
+            //~ 5. if we are not seeing an instruction, figure out if:
             let comment = if let Some(end) = end_comment {
                 if has_end(end, comment) {
-                    //~     - note that either the comment is ending
+                    //~~ - the comment is ending
 
                     in_spec_comment = None;
                     comment.trim_end_matches(end)
                 } else {
-                    //~     - or it goes on to the next line
+                    //~~ - or goes on to the next line
 
                     if in_spec_comment.is_none() {
                         let offset = line.find(start_comment).unwrap() + start_comment.len();
@@ -168,14 +168,29 @@ pub fn parse_code(
                 comment
             };
 
-            let comment = comment.strip_prefix(' ').unwrap_or(comment);
-            writeln!(&mut result, "{}", comment).unwrap();
+            //~ 6. Finally, extract the specification text.
+            //~    Each `~` at the start of the comment,
+            //~    not including the first one,
+            //~    is converted to a tab.
+            //~    This allows us to write `//~~ *` for nested list items.
+            let no_more_tilde = comment.trim_start_matches("~");
+
+            let mut indented = {
+                let indentation = comment.len() - no_more_tilde.len();
+                let indentation: Vec<_> = (0..indentation).map(|_| "\t").collect();
+                indentation.join("")
+            };
+
+            let comment = no_more_tilde.trim_start();
+            indented.push_str(comment);
+
+            writeln!(&mut result, "{indented}").unwrap();
         }
 
         byte_offset_for_errors += line.len() + 1; // +1 for the newline character
     }
 
-    //~ 6. at the end, make sure that every startcode instruction
+    //~ 7. at the end, make sure that every startcode instruction
     //~    is matched with a endcode instruction
     if let Some(offset) = extract_code {
         return Err(SpecError::MissingEndcode {
@@ -185,6 +200,6 @@ pub fn parse_code(
         .into_diagnostic();
     }
 
-    //~ 7. return the result
+    //~ 8. return the result
     Ok(result)
 }

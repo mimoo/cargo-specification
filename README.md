@@ -104,6 +104,22 @@ or in OCaml:
 
 > While cargo-spec is language-agnostic, it does not support all type of comments. [Post an issue](https://github.com/mimoo/cargo-specification/issues/new) if it does not work for the language you're using.
 
+## Nested lists
+
+It can be tiring to indent manually your comments to create nested lists:
+
+```rust
+//~ - a list
+//~   - a nested list
+```
+
+instead, simply add `~` at the start of your spec comment to add indentation:
+
+```rust
+//~ - a list
+//~~ - a nested list
+```
+
 ## Importing code
 
 You can import blocks of code by surrounding them with `//~ spec:startcode` and `//~ spec:endcode`:
