@@ -181,7 +181,7 @@ pub fn parse_code(
                 indentation.join("")
             };
 
-            let comment = no_more_tilde.trim_start();
+            let comment = no_more_tilde.strip_prefix(' ').unwrap_or(comment);
             indented.push_str(comment);
 
             writeln!(&mut result, "{indented}").unwrap();
