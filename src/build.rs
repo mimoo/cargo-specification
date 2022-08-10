@@ -7,7 +7,7 @@ use std::{
 };
 use tinytemplate::TinyTemplate;
 
-use crate::{comment_parser, formats, toml_parser};
+use crate::{comment_parser, errors::SpecError, formats, git::get_local_repo_path, toml_parser};
 
 /// The different specification format that cargo-spec can output
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ArgEnum)]
@@ -44,9 +44,22 @@ pub fn build(
         .wrap_err_with(|| format!("could not read template {}", template_path.display(),))?;
 
     //~ 3. extract the spec comments from all the files listed using [comment_parser](#comment-parser)
+    let base = get_local_repo_path();
     for filename in specification.sections.values_mut() {
-        let mut path = spec_dir.clone();
-        path.push(&filename);
+        let path = if matches!(filename.chars().next(), Some('@')) {
+            let base = base
+                .as_ref()
+                .ok_or(SpecError::NotGitRepo(filename.clone()))
+                .into_diagnostic()?;
+            let base = base.trim();
+            // TODO: this will panic if we just wrote @ and not @/
+            let filename = filename.split_at(2).1.to_string();
+            PathBuf::from(base).join(filename)
+        } else {
+            let mut path = spec_dir.clone();
+            path.push(&filename);
+            path
+        };
         files_to_watch.insert(path.clone());
 
         *filename = comment_parser::parse_file(&path)?;

@@ -60,7 +60,7 @@ template = "template.md"
 [sections]
 # all the files you want to extract "spec comments" from
 data_structures = "src/data_structures.rs"
-abstract_modules = "src/module.rs"
+abstract_modules = "@/src/module.rs" # you can also use absolute paths (you need to be in a git repo)
 ```
 
 ### Template

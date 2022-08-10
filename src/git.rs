@@ -24,7 +24,7 @@ fn get_github_repo() -> Option<String> {
 }
 
 /// runs `git rev-parse --show-toplevel` to get filepath of root
-fn get_local_repo_path() -> Option<String> {
+pub fn get_local_repo_path() -> Option<String> {
     let res = Command::new("git")
         .args(&["rev-parse", "--show-toplevel"])
         .output()

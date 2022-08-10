@@ -56,4 +56,7 @@ pub enum SpecError {
         #[label("try spec:startcode or spec:endcode instead")]
         bad_bit: (usize, usize),
     },
+
+    #[error("This is not a git repository, you can't use `@/` in the path of section {0}")]
+    NotGitRepo(String),
 }
