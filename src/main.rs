@@ -1,16 +1,10 @@
-use build::{build, watch, OutputFormat};
+use cargo_spec::{
+    build::{build, watch, OutputFormat},
+    init::{init, new, DEFAULT_MANIFEST, DEFAULT_TEMPLATE},
+};
 use clap::{Args, Parser, Subcommand};
-use init::{init, new, DEFAULT_MANIFEST, DEFAULT_TEMPLATE};
 use miette::Result;
 use std::path::PathBuf;
-
-mod build;
-mod comment_parser;
-mod errors;
-mod formats;
-mod git;
-mod init;
-mod toml_parser;
 
 /// To make cargo subcommands work, you need to use `bin_name`,
 /// as well as a subcommand.
