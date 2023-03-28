@@ -9,7 +9,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 askama = "0.11.0" # HTML template
 clap = { version = "3.0.5", features = ["derive"] } # CLI
-comrak = "0.13.0" # markdown
+comrak = "0.17.0" # markdown
 miette = { version = "4.2.1", features = ["fancy"] }
 notify = "4.0.17" # watch files
 serde = { version = "1.0.133", features = ["derive"] } # deserialize toml
